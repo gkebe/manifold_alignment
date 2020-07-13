@@ -81,7 +81,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     embedded_dim = 1024
 
     # Setup the results and device.
-    results_dir = f'./{experiment_name}'
+    results_dir = f'./output/{experiment_name}'
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
