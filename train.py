@@ -11,7 +11,7 @@ from sklearn.metrics import precision_recall_fscore_support
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
-
+from torch.utils.data import (DataLoader, SequentialSampler)
 from datasets import gl_loaders, GLData
 from losses import triplet_loss_vanilla
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
@@ -32,8 +32,8 @@ def parse_args():
         help='random seed for train test split')
     #parser.add_argument('--embedded_dim', default=1024, type=int,
     #    help='Dimension of embedded manifold')
-    #parser.add_argument('--batch_size', type=int, default=1,
-    #   help='batch size for learning')
+    parser.add_argument('--batch_size', type=int, default=1,
+       help='batch size for learning')
 
     return parser.parse_known_args()
 
@@ -61,7 +61,12 @@ def lr_lambda(e):
     else:
         return 0.00001
 
-def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None):
+def get_examples_batch(pos_neg_examples,indices,train_data):
+    examples = [pos_neg_examples[i] for i in indices]
+    return [train_data[i] for i in examples]
+
+
+def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1):
     """Train joint embedding networks."""
 
     epochs = int(epochs)
@@ -120,6 +125,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
     language_model = RowNet(language_dim, embed_dim=embedded_dim)
     vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+    train_sampler = SequentialSampler(train_data)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
 
     # Finish model setup
     # If we want to load pretrained models to continue training...
@@ -150,49 +157,45 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     batch_loss = []
     avg_epoch_loss = []
 
-    for epoch in tqdm(range(epochs)):
+    for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
-        batch_num = 0
-        for i, (language, vision, object_name, instance_name) in enumerate(train_data):
-            #print(f'Training {i}...')
+        for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+        #for i, (language, vision, object_name, instance_name) in enumerate(train_data):
+            language, vision, object_name, instance_name = batch
+            indices = list(range(step * 3, (step + 1) * 3))
+            language_pos_examples, language_neg_examples = get_examples_batch(pos_neg_examples,indices,language_train_data)
+            vision_pos_examples, vision_neg_examples = get_examples_batch(pos_neg_examples,indices,vision_train_data)
+        #print(f'Training {i}...')
             # Zero the parameter gradients.
             language_optimizer.zero_grad()
             vision_optimizer.zero_grad()
-            triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2.0)
+            triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
 
             rand_int = random.randint(1, 4)
 
             # Determine triplets based on epoch + index (mod 4)
             if rand_int == 1:
                 anchor = vision.to(device)
-                positive = vision_train_data[pos_neg_examples[i][0]]
-                negative = vision_train_data[pos_neg_examples[i][1]]
-                positive = positive.to(device)
-                negative = negative.to(device)
+                positive = vision_pos_examples.to(device)
+                negative = vision_neg_examples.to(device)
                 loss = triplet_loss(vision_model(anchor), vision_model(positive), vision_model(negative))
 
             elif rand_int == 2:
                 anchor = language.to(device)
-                positive = language_train_data[pos_neg_examples[i][0]]
-                negative = language_train_data[pos_neg_examples[i][1]]
-                positive = positive.to(device)
-                negative = negative.to(device)
+                positive = language_pos_examples.to(device)
+                negative = language_neg_examples.to(device)
                 loss = triplet_loss(language_model(anchor), language_model(positive), language_model(negative))
 
             elif rand_int == 3:
                 anchor = vision.to(device)
-                positive = language_train_data[pos_neg_examples[i][0]]
-                negative = language_train_data[pos_neg_examples[i][1]]
-                positive = positive.to(device)
-                negative = negative.to(device)
+                positive = language_pos_examples.to(device)
+                negative = language_neg_examples.to(device)
                 loss = triplet_loss(vision_model(anchor), language_model(positive), language_model(negative))
 
             elif rand_int == 4:
                 anchor = language.to(device)
-                positive = vision_train_data[pos_neg_examples[i][0]]
-                negative = vision_train_data[pos_neg_examples[i][1]]
-                positive = positive.to(device)
-                negative = negative.to(device)
+                positive = vision_pos_examples.to(device)
+                negative = vision_neg_examples.to(device)
                 loss = triplet_loss(language_model(anchor), vision_model(positive), vision_model(negative))
 
             loss.backward()
@@ -219,9 +222,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
             epoch_loss += loss.item()
 
             #reporting progress
-            batch_num += 1
-            if not batch_num % (len(train_data) // 32):
-                print(f'epoch: {epoch + 1}, batch: {batch_num}, loss: {loss.item()}')
+            if not step % (len(train_data) // 32):
+                print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
 
         # Save network state at each epoch.
         torch.save(language_model.state_dict(), os.path.join(train_results_dir, 'model_A_state.pt'))
@@ -258,6 +260,7 @@ def main():
         pos_neg_examples_file=ARGS.pos_neg_examples_file,
         margin=0.4,
         seed=ARGS.seed,
+        batch_size=ARGS.batch_size
     )
 
 if __name__ == '__main__':
