@@ -162,7 +162,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
         #for i, (language, vision, object_name, instance_name) in enumerate(train_data):
             language, vision, object_name, instance_name = batch
-            indices = list(range(step * 3, (step + 1) * 3))
+            indices = list(range(step * batch_size, (step + 1) * batch_size))
             language_pos_examples, language_neg_examples = get_examples_batch(pos_neg_examples,indices,language_train_data)
             vision_pos_examples, vision_neg_examples = get_examples_batch(pos_neg_examples,indices,vision_train_data)
         #print(f'Training {i}...')
