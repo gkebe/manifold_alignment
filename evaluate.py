@@ -46,7 +46,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num):
     vision_dim = 4096
     embedded_dim = 1024
 
-    results_dir = f'./{experiment_name}'
+    results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
 
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
