@@ -63,6 +63,7 @@ def lr_lambda(e):
 
 def get_examples_batch(pos_neg_examples,indices,train_data):
     examples = [pos_neg_examples[i] for i in indices]
+    print(examples)
     return [train_data[i] for i in examples]
 
 
