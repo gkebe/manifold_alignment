@@ -50,9 +50,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     vision_test_data = [(v, i) for _, v, _, i in test_data]
 
     # BERT dimension
-    language_dim = list(language_test_data[0].size())[0]
+    language_dim = list(language_test_data[0][0].size())[0]
     # Eitel dimension
-    vision_dim = list(vision_test_data[0][0].size())[0]
+    vision_dim = list(vision_test_data[0][0][0].size())[0]
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
