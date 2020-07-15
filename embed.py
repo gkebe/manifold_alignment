@@ -113,10 +113,10 @@ def main():
         ARGS.embedded_dim
     )
 
-    with open("output/"+ARGS.experiment_name+"_l_embeddings", 'wb') as fout:
+    with open("output/"+ARGS.experiment_name+"_l_embeddings.pkl", 'wb') as fout:
         pickle.dump(l_embeddings, fout)
 
-    with open("output/"+ARGS.experiment_name+"_v_embeddings", 'wb') as fout:
+    with open("output/"+ARGS.experiment_name+"_v_embeddings.pkl", 'wb') as fout:
         pickle.dump(v_embeddings, fout)
 
     print(f'Wrote two files\n\t{"output/"+ARGS.experiment_name+"_l_embeddings"}\n\t{"output/"+ARGS.experiment_name+"_v_embeddings"}')
