@@ -6,7 +6,7 @@ import pickle
 def main(args):
     with open(args.input, "rb") as f:
         text_descriptions = pickle.load(f, encoding='bytes')
-    language_data = []
+    language_data =dict()
     document_embeddings = flair.embeddings.DocumentPoolEmbeddings([flair.embeddings.BertEmbeddings()])
     def bert_embedding(sentence):
         sentence = flair.data.Sentence(sentence, use_tokenizer=True)
@@ -25,13 +25,21 @@ def main(args):
                 languages.append([desc.strip(), instance_name])
         descriptions = [i[0] for i in languages]
         descriptions_sbert = sbert_embedding(descriptions)
+
         for i in range(len(descriptions_sbert)):
-            language_data.append((languages[i][1], descriptions_sbert[i]))
+            if languages[i][1] in language_data:
+                language_data[languages[i][1]].append(descriptions_sbert[i])
+            else:
+                language_data[languages[i][1]] = []
 
     elif args.method == "bert":
+        languages = []
         for instance_name, language_descriptions in text_descriptions.items():
+            instance_data = []
             for desc in language_descriptions:
-                language_data.append((instance_name, bert_embedding(desc.strip())))
+                languages.append([desc.strip(), instance_name])
+                instance_data.append(bert_embedding(desc.strip()))
+            language_data.update({instance_name: instance_data})
 
     pickle.dump(language_data, open(args.output, "wb"))
 if __name__ == "__main__":
