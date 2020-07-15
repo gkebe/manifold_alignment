@@ -73,12 +73,20 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     margin = float(margin)
     gpu_num = str(gpu_num)
     procrustes = float(procrustes)
+    with open(train_data_path, 'rb') as fin:
+        train_data = pickle.load(fin)
+
+    #if test_data_path is not None:
+    #    _, test_data = gl_loaders(test_data_path)
+
+    language_train_data = [l for l, _, _, _ in train_data]
+    vision_train_data = [v for _, v, _, _ in train_data]
 
     # BERT dimension
-    language_dim = 3072
+    language_dim = list(language_train_data[0].size())[0]
     # Eitel dimension
-    vision_dim = 4096
-    embedded_dim = 1024
+    vision_dim = list(vision_train_data[0].size())[0]
+    embedded_dim = 768
 
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
@@ -101,15 +109,6 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
     # Setup data loaders and models.
     #train_data, _ = gl_loaders(train_data_path, seed=seed)
-
-    with open(train_data_path, 'rb') as fin:
-        train_data = pickle.load(fin)
-
-    #if test_data_path is not None:
-    #    _, test_data = gl_loaders(test_data_path)
-
-    language_train_data = [l for l, _, _, _ in train_data]
-    vision_train_data = [v for _, v, _, _ in train_data]
 
     if pos_neg_examples_file is None:
         print('Calculating examples from scratch...')
