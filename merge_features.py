@@ -2,15 +2,21 @@ import flair
 import argparse
 from sentence_transformers import SentenceTransformer
 import pickle
-import torch
-
-def fix_tensor(tens):
-    tens.requires_grad = False
-    return tens
 
 def main(args):
-    with open(args.input, "rb") as f:
-        text_descriptions = pickle.load(f, encoding='bytes')
+    with open(args.language_data, "rb") as f:
+        language_data = pickle.load(f, encoding='bytes')
+    with open(args.vision_data, "rb") as f:
+        vision_data = pickle.load(f, encoding='bytes')
+    keys_l = language_data.keys()
+    keys_v = vision_data.keys()
+
+    instances = list(set(keys_l) & set(keys_v))
+    objects = ["_".join(i.split("_")[:-2]) for i in instances]
+
+    vision_data = [vision_data[i] for i in instances]
+    language_data = [language_data[i] for i in instances]
+
     language_data =dict()
     document_embeddings = flair.embeddings.DocumentPoolEmbeddings([flair.embeddings.BertEmbeddings()])
     def bert_embedding(sentence):
@@ -33,7 +39,7 @@ def main(args):
 
         for i in range(len(descriptions_sbert)):
             if languages[i][1] in language_data:
-                language_data[languages[i][1]].append(torch.tensor(descriptions_sbert[i]))
+                language_data[languages[i][1]].append(descriptions_sbert[i])
             else:
                 language_data[languages[i][1]] = [descriptions_sbert[i]]
 
@@ -43,26 +49,25 @@ def main(args):
             instance_data = []
             for desc in language_descriptions:
                 languages.append([desc.strip(), instance_name])
-                instance_data.append(fix_tensor(bert_embedding(desc.strip())))
+                instance_data.append(bert_embedding(desc.strip()))
             language_data.update({instance_name: instance_data})
 
     pickle.dump(language_data, open(args.output, "wb"))
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ## Required parameters
-    parser.add_argument("--input",
+    parser.add_argument("--language_data",
                         type=str,
                         required=True,
-                        help="Specify a input filename!")
+                        help="Specify path to language data!")
 
-    parser.add_argument("--method",
-                        default="sbert",
+    parser.add_argument("--vision_data",
                         type=str,
-                        required=False,
-                        help="Specify an embedding method!")
+                        required=True,
+                        help="Specify path to vision data!")
 
     parser.add_argument("--output",
-                        default="text_embeddings.pkl",
+                        default="dataset.pkl",
                         type=str,
                         required=False,
                         help="Specify a output filename!")
