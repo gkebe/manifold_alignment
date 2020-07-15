@@ -80,8 +80,8 @@ def embed(experiment_name, data_path, gpu_num, embedded_dim):
     for vision_index, vision in enumerate(vision_data_):
         
         vision_data = vision[0].to(device)
-        vision_object = vision[1].to(device)
-        vision_instance = vision[2].to(device)
+        vision_object = vision[1]
+        vision_instance = vision[2]
         
         embedded_vision = vision_model(vision_data).cpu().detach()
         instances_vision.append(vision_instance)
@@ -90,8 +90,8 @@ def embed(experiment_name, data_path, gpu_num, embedded_dim):
 
     for language_index, language in enumerate(language_data_):
         language_data = language[0].to(device)
-        language_object = language[1].to(device)
-        language_instance = language[2].to(device)
+        language_object = language[1]
+        language_instance = language[2]
 
         embedded_language = language_model(language_data).cpu().detach()
         instances_language.append(language_instance)
