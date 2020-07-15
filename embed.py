@@ -43,9 +43,9 @@ def embed(experiment_name, data_path, gpu_num, embedded_dim):
 
     with open(data_path, 'rb') as fin:
         data = pickle.load(fin)
-    data, _ = gl_dataset(data_path, 100)
-    language_data_ = [(l, o, i) for l, _, o, i in data]
-    vision_data_ = [(v, o, i) for _, v, o, i in data]
+
+    language_data_ = [(data["language_data"][i], data["object_names"][i], data["instance_names"][i]) for i in range(len(data["instance_names"]))]
+    vision_data_ = [(data["vision_data"][i], data["object_names"][i], data["instance_names"][i]) for i in range(len(data["instance_names"]))]
 
     # BERT dimension
     language_dim = list(language_data_[0][0].size())[0]
