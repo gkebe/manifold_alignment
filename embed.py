@@ -50,7 +50,7 @@ def embed(experiment_name, data_path, gpu_num, embedded_dim):
     # BERT dimension
     language_dim = list(language_data_[0][0].size())[0]
     # Eitel dimension
-    vision_dim = list(vision_data_[0][0][0].size())[0]
+    vision_dim = list(vision_data_[0][0].size())[0]
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
