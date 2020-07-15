@@ -30,7 +30,7 @@ def main(args):
             if languages[i][1] in language_data:
                 language_data[languages[i][1]].append(descriptions_sbert[i])
             else:
-                language_data[languages[i][1]] = []
+                language_data[languages[i][1]] = [descriptions_sbert[i]]
 
     elif args.method == "bert":
         languages = []
