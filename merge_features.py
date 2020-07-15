@@ -25,7 +25,7 @@ def main(args):
             data["instance_names"].append(instances[i])
             data["object_names"].append(objects[i])
             data["language_data"].append(lang)
-            data["vision_data"].append(vision_data[i])
+            data["vision_data"].append(vision_data[instances[i]])
 
     pickle.dump(data, open(args.output, "wb"))
 if __name__ == "__main__":
