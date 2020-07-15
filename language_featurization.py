@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 import pickle
 
 def main(args):
-
+    text_descriptions = pickle.load(args.input, encoding='bytes')
     language_data =dict()
     document_embeddings = flair.embeddings.DocumentPoolEmbeddings([flair.embeddings.BertEmbeddings()])
     def bert_embedding(sentence):
