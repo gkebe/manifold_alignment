@@ -30,8 +30,8 @@ def parse_args():
         help='path to examples pkl')
     parser.add_argument('--seed', type=int, default=75,
         help='random seed for train test split')
-    #parser.add_argument('--embedded_dim', default=1024, type=int,
-    #    help='Dimension of embedded manifold')
+    parser.add_argument('--embedded_dim', default=1024, type=int,
+        help='Dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
        help='batch size for learning')
 
@@ -66,7 +66,7 @@ def get_examples_batch(pos_neg_examples,indices,train_data):
     return torch.stack([train_data[i[0]] for i in examples]), torch.stack([train_data[i[1]] for i in examples])
 
 
-def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1):
+def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
     """Train joint embedding networks."""
 
     epochs = int(epochs)
@@ -259,7 +259,8 @@ def main():
         pos_neg_examples_file=ARGS.pos_neg_examples_file,
         margin=0.4,
         seed=ARGS.seed,
-        batch_size=ARGS.batch_size
+        batch_size=ARGS.batch_size,
+        embedded_dim=ARGS.embedded_dim
     )
 
 if __name__ == '__main__':
