@@ -85,9 +85,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     # BERT dimension
     language_dim = list(language_train_data[0].size())[0]
     # Eitel dimension
-    vision_dim = list(vision_train_data[0].size())[0]
-    embedded_dim = 768
-
+    vision_dim = list(vision_train_data[0][0].size())[0]
+    
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
     if not os.path.exists(results_dir):
