@@ -15,6 +15,10 @@ def main(args):
     objects = ["_".join(i.split("_")[:-2]) for i in instances]
 
     data = dict()
+    data["instance_names"] = []
+    data["object_names"] = []
+    data["language_data"] = []
+    data["vision_data"] = []
 
     for i in range(len(instances)):
         for lang in language_data[instances[i]]:
