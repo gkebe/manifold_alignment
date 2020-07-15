@@ -21,6 +21,8 @@ def parse_args():
         help='path to examples pkl')
     parser.add_argument('--gpu_num', default='0',
         help='gpu id number')
+    parser.add_argument('--embedded_dim', default=1024, type=int,
+        help='embedded_dim')
 
     return parser.parse_known_args()
 
@@ -39,21 +41,24 @@ class RowNet(torch.nn.Module):
 
         return x
 
-def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num):
+def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim):
+
+    with open(test_data_path, 'rb') as fin:
+        test_data = pickle.load(fin)
+
+    language_test_data = [(l, i) for l, _, _, i in test_data]
+    vision_test_data = [(v, i) for _, v, _, i in test_data]
+
     # BERT dimension
-    language_dim = 3072
+    language_dim = list(language_test_data[0].size())[0]
     # Eitel dimension
-    vision_dim = 4096
-    embedded_dim = 1024
+    vision_dim = list(vision_test_data[0][0].size())[0]
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
 
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
-
-    with open(test_data_path, 'rb') as fin:
-        test_data = pickle.load(fin)
 
     with open(pos_neg_examples_file, 'rb') as fin:
         pos_neg_examples = pickle.load(fin)
@@ -66,9 +71,6 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num):
     vision_model.to(device)
     language_model.eval()
     vision_model.eval()
-
-    language_test_data = [(l, i) for l, _, _, i in test_data]
-    vision_test_data = [(v, i) for _, v, _, i in test_data]
 
     # Vision to Language
     reciprocal_sum_euclid_pos_neg = 0
@@ -299,6 +301,7 @@ def main():
         ARGS.test_data_path,
         ARGS.pos_neg_examples_file,
         ARGS.gpu_num,
+        ARGS.embedded_dim
     )
 
     print(f'V -> L p/n: {v_to_l_pos_neg}')
