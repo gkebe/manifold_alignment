@@ -25,7 +25,6 @@ def main(args):
     if args.method == "sbert":
         languages = []
         for instance_name, language_descriptions in text_descriptions.items():
-            instance_data = []
             for desc in language_descriptions:
                 languages.append([desc.strip(), instance_name])
         descriptions = [i[0] for i in languages]
@@ -35,7 +34,7 @@ def main(args):
             if languages[i][1] in language_data:
                 language_data[languages[i][1]].append(torch.tensor(descriptions_sbert[i]))
             else:
-                language_data[languages[i][1]] = [descriptions_sbert[i]]
+                language_data[languages[i][1]] = [torch.tensor(descriptions_sbert[i])]
 
     elif args.method == "bert":
         languages = []
