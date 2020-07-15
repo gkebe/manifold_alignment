@@ -14,45 +14,16 @@ def main(args):
     instances = list(set(keys_l) & set(keys_v))
     objects = ["_".join(i.split("_")[:-2]) for i in instances]
 
-    vision_data = [vision_data[i] for i in instances]
-    language_data = [language_data[i] for i in instances]
+    data = dict()
 
-    language_data =dict()
-    document_embeddings = flair.embeddings.DocumentPoolEmbeddings([flair.embeddings.BertEmbeddings()])
-    def bert_embedding(sentence):
-        sentence = flair.data.Sentence(sentence, use_tokenizer=True)
-        document_embeddings.embed(sentence)
-        return sentence.get_embedding()
+    for i in range(len(instances)):
+        for lang in language_data[instances[i]]:
+            data["instance_names"].append(instances[i])
+            data["object_names"].append(objects[i])
+            data["language_data"].append(lang)
+            data["vision_data"].append(vision_data[i])
 
-    def sbert_embedding(sentences):
-        model = SentenceTransformer('bert-base-nli-mean-tokens')
-        return model.encode(sentences)
-
-    if args.method == "sbert":
-        languages = []
-        for instance_name, language_descriptions in text_descriptions.items():
-            instance_data = []
-            for desc in language_descriptions:
-                languages.append([desc.strip(), instance_name])
-        descriptions = [i[0] for i in languages]
-        descriptions_sbert = sbert_embedding(descriptions)
-
-        for i in range(len(descriptions_sbert)):
-            if languages[i][1] in language_data:
-                language_data[languages[i][1]].append(descriptions_sbert[i])
-            else:
-                language_data[languages[i][1]] = [descriptions_sbert[i]]
-
-    elif args.method == "bert":
-        languages = []
-        for instance_name, language_descriptions in text_descriptions.items():
-            instance_data = []
-            for desc in language_descriptions:
-                languages.append([desc.strip(), instance_name])
-                instance_data.append(bert_embedding(desc.strip()))
-            language_data.update({instance_name: instance_data})
-
-    pickle.dump(language_data, open(args.output, "wb"))
+    pickle.dump(data, open(args.output, "wb"))
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     ## Required parameters
