@@ -16,7 +16,7 @@ def main(args):
     def bert_embedding(sentence):
         sentence = flair.data.Sentence(sentence, use_tokenizer=True)
         document_embeddings.embed(sentence)
-        return sentence.get_embedding()
+        return sentence.get_embedding().cpu()
 
     def sbert_embedding(sentences):
         model = SentenceTransformer('bert-base-nli-mean-tokens')
