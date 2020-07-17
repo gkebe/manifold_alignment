@@ -50,7 +50,7 @@ def main(args):
                 object_name = "_".join(instance_name.split("_")[:-2])
                 object_names.append(object_name)
                 descriptions_features.append(fix_tensor(bert_embedding(desc.strip())))
-
+            descriptions = [i[0] for i in languages]
     language_dict = {"instance_names": instance_names, "object_names": object_names,
                      "embedded_vectors": descriptions_features, "descriptions": descriptions}
 
