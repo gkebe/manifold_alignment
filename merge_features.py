@@ -29,7 +29,7 @@ def main(args):
             data["instance_names"].append(instances[i])
             data["object_names"].append(objects[i])
             data["language_data"].append(fix_tensor(lang))
-            data["vision_data"].append(fix_tensor(vision_data[instances[i]]))
+            data["vision_data"].append(fix_tensor(vision_data[instances[i]][0]))
 
     pickle.dump(data, open(args.output, "wb"))
 if __name__ == "__main__":
