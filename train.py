@@ -200,25 +200,25 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
                 anchor = vision.to(device)
                 positive = vision_pos_examples.to(device)
                 negative = language_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), vision_model(positive), vision_model(negative))
+                loss = triplet_loss(vision_model(anchor), vision_model(positive), language_model(negative))
 
             elif rand_int == 6:
                 anchor = language.to(device)
                 positive = language_pos_examples.to(device)
                 negative = vision_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), language_model(positive), language_model(negative))
+                loss = triplet_loss(language_model(anchor), language_model(positive), vision_model(negative))
 
             elif rand_int == 7:
                 anchor = vision.to(device)
                 positive = language_pos_examples.to(device)
                 negative = vision_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), language_model(positive), language_model(negative))
+                loss = triplet_loss(vision_model(anchor), language_model(positive), vision_model(negative))
 
             elif rand_int == 8:
                 anchor = language.to(device)
                 positive = vision_pos_examples.to(device)
                 negative = language_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), vision_model(positive), vision_model(negative))
+                loss = triplet_loss(language_model(anchor), vision_model(positive), language_model(negative))
 
             loss.backward()
             vision_optimizer.step()
