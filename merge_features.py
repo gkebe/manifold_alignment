@@ -46,7 +46,7 @@ if __name__ == "__main__":
                         help="Specify path to vision data!")
 
     parser.add_argument("--output",
-                        default="dataset.pkl",
+                        default="sbert_dataset.pkl",
                         type=str,
                         required=False,
                         help="Specify a output filename!")

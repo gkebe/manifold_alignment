@@ -5,6 +5,7 @@ import random
 import scipy
 import scipy.spatial
 import torch
+import numpy as np
 
 from datasets import GLData
 
@@ -27,28 +28,29 @@ def get_negative_language(l, data, n=10):
 
     return negative[0], data[negative[0]]
 
-def get_pos_neg_examples(language, language_data):
+def get_pos_neg_examples(language, language_data, object_names):
     """
     language: the language to find negatives of
     language_data: the set of all language features
+    object_names: the set of all object_names
     n: the top n negatives to choose from
     k: sample size to return
 
     returns the indices in language_data of the negatives as a list
     """
-    cosines = []
+    positive_index = 0
     for i, vector in enumerate(language_data):
         # .data[0] necessary to compare on cuda
         if torch.equal(language, vector):
-            continue
-        cosines.append((i, scipy.spatial.distance.cosine(language, vector)))
-    cosines.sort(key=lambda x: x[1])
-
+            positive_index = i
+    index = positive_index
+    while (positive_index == index):
+        positive_index = np.random.choice(
+            [i for i, x in enumerate(object_names) if x == object_names[index]])
+    negative_label = np.random.choice(list(set(object_names) - set([object_names[index]])))
+    negative_index = np.random.choice([i for i, x in enumerate(object_names) if x == negative_label])
     # choose randomly for top n negative examples
     # this returns indexes
-    positive_index = cosines[-1][0]
-    negative_index = cosines[0][0]
-
     return positive_index, negative_index
 
 def main():
@@ -61,11 +63,11 @@ def main():
 
     with open(ARGS.data_file, 'rb') as fin:
         data = pickle.load(fin)
-        language_data = [l for l, _, _, _ in data]
+        language_data, object_names = [l for l, _, o, _ in data]
         for i, language in enumerate(language_data):
             if i % 100 == 0:
                 print(f'Calculating {i}/{len(language_data)}')
-            negatives.append(get_pos_neg_examples(language, language_data))
+            negatives.append(get_pos_neg_examples(language, language_data, object_names))
 
     with open(ARGS.out_file, 'wb') as fout:
         pickle.dump(negatives, fout)

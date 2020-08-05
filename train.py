@@ -54,9 +54,9 @@ class RowNet(torch.nn.Module):
 
 # Add learning rate scheduling.
 def lr_lambda(e):
-    if e < 50:
+    if e < 20:
         return 0.001
-    elif e < 100:
+    elif e < 40:
         return 0.0001
     else:
         return 0.00001
@@ -140,8 +140,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     vision_model.to(device)
 
     # Initialize the optimizers and loss function.
-    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=0.00001)
-    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.00001)
+    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=0.001)
+    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
 
     language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
@@ -169,7 +169,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
             vision_optimizer.zero_grad()
             triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
 
-            rand_int = random.randint(1, 4)
+            rand_int = random.randint(1, 8)
 
             # Determine triplets based on epoch + index (mod 4)
             if rand_int == 1:
@@ -194,6 +194,30 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
                 anchor = language.to(device)
                 positive = vision_pos_examples.to(device)
                 negative = vision_neg_examples.to(device)
+                loss = triplet_loss(language_model(anchor), vision_model(positive), vision_model(negative))
+
+            elif rand_int == 5:
+                anchor = vision.to(device)
+                positive = vision_pos_examples.to(device)
+                negative = language_neg_examples.to(device)
+                loss = triplet_loss(vision_model(anchor), vision_model(positive), vision_model(negative))
+
+            elif rand_int == 6:
+                anchor = language.to(device)
+                positive = language_pos_examples.to(device)
+                negative = vision_neg_examples.to(device)
+                loss = triplet_loss(language_model(anchor), language_model(positive), language_model(negative))
+
+            elif rand_int == 7:
+                anchor = vision.to(device)
+                positive = language_pos_examples.to(device)
+                negative = vision_neg_examples.to(device)
+                loss = triplet_loss(vision_model(anchor), language_model(positive), language_model(negative))
+
+            elif rand_int == 8:
+                anchor = language.to(device)
+                positive = vision_pos_examples.to(device)
+                negative = language_neg_examples.to(device)
                 loss = triplet_loss(language_model(anchor), vision_model(positive), vision_model(negative))
 
             loss.backward()
