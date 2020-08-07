@@ -169,8 +169,6 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     language_embeddings = np.concatenate(language_embeddings, axis=0)
     vision_embeddings = np.concatenate(vision_embeddings, axis=0)
 
-    print(language_embeddings)
-    print(vision_embeddings)
     ab = np.concatenate((language_embeddings, vision_embeddings), axis=0)
 
     # Given language -> nearest vision embeddings
@@ -212,11 +210,11 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         corr_between(language_embeddings, vision_embeddings, cosine=False), np.mean(f1s), np.mean(f1s_binary))
     )
 
-    language_accuracy = language_tests.count(True) / len(language_tests)
-    vision_accuracy = vision_tests.count(True) / len(vision_tests)
-
-    print(f'Language: {language_tests.count(True)}/{len(language_tests)} = {language_accuracy}')
-    print(f'Vision: {vision_tests.count(True)}/{len(vision_tests)} = {vision_accuracy}')
+    # language_accuracy = language_tests.count(True) / len(language_tests)
+    # vision_accuracy = vision_tests.count(True) / len(vision_tests)
+    #
+    # print(f'Language: {language_tests.count(True)}/{len(language_tests)} = {language_accuracy}')
+    # print(f'Vision: {vision_tests.count(True)}/{len(vision_tests)} = {vision_accuracy}')
 
 if __name__ == '__main__':
     ARGS, unused = parse_args()
