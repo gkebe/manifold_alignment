@@ -13,10 +13,8 @@ from datasets import GLData
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment_name', type=str, default='RandomExperiment',
-        help='name of experiment to test')
-    parser.add_argument('--test_data_path', type=str,
-        help='path to testing data')
+    parser.add_argument('--experiment_name', help='name of experiment to test')
+    parser.add_argument('--test_data_path', help='path to testing data')
     parser.add_argument('--pos_neg_examples_file', default=None,
         help='path to examples pkl')
     parser.add_argument('--gpu_num', default='0',
@@ -43,6 +41,8 @@ class RowNet(torch.nn.Module):
 
 def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim):
 
+    pn_fout = open('./pn_eval_output.txt', 'w')
+    rand_fout = open('./rand_eval_output.txt', 'w')
     with open(test_data_path, 'rb') as fin:
         test_data = pickle.load(fin)
 
@@ -80,6 +80,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     v_to_l_pn_counts = defaultdict(int)
     v_to_l_rand_counts = defaultdict(int)
     for vision_index, vision in enumerate(vision_test_data):
+        pn_fout.write(f'V->L {language_test_data[vision_index][1]} ')
+        rand_fout.write(f'V->L {language_test_data[vision_index][1]} ')
+
         euclidean_distances = []
         cosine_distances = []
         vision_data = vision[0].to(device)
@@ -94,6 +97,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         pos_index = pos_neg_examples[vision_index][0]
         neg_index = pos_neg_examples[vision_index][1]
+
+        pn_fout.write(f'{language_test_data[pos_index][1]} {language_test_data[neg_index][1]} ')
+
         language_target = language_test_data[vision_index][0].to(device)
         language_pos = language_test_data[pos_index][0].to(device)
         language_neg = language_test_data[neg_index][0].to(device)
@@ -125,6 +131,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
                 cosine_rank_pos_neg = i
                 break
 
+        pn_fout.write(f'{euclid_rank_pos_neg} {cosine_rank_pos_neg}\n')
+
         reciprocal_sum_euclid_pos_neg += 1 / euclid_rank_pos_neg
         reciprocal_sum_cosine_pos_neg += 1 / cosine_rank_pos_neg
 
@@ -143,6 +151,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
         cosine_distances_random.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_language_target)))
 
         for i in random_indexes:
+            rand_fout.write(f'language_test_data[i][1] ')
             language_data = language_test_data[i][0].to(device)
             embedded_language = language_model(language_data).cpu().detach().numpy()
             euclidean_distances_random.append(('random', scipy.spatial.distance.euclidean(embedded_vision, embedded_language)))
@@ -163,6 +172,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
             if key == 'target':
                 cosine_rank_random = i
                 break
+
+        rand_fout.write(f'{euclid_rank_random} {cosine_rank_random}\n')
 
         reciprocal_sum_euclid_random += 1 / euclid_rank_random
         reciprocal_sum_cosine_random += 1 / cosine_rank_random
@@ -187,6 +198,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     l_to_v_pn_counts = defaultdict(int)
     l_to_v_rand_counts = defaultdict(int)
     for language_index, language in enumerate(language_test_data):
+        pn_fout.write(f'L->V {vision_test_data[language_index][1]} ')
+        rand_fout.write(f'L->V {vision_test_data[language_index][1]} ')
+
         euclidean_distances = []
         cosine_distances = []
         language_data = language[0].to(device)
@@ -201,6 +215,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         pos_index = pos_neg_examples[language_index][0]
         neg_index = pos_neg_examples[language_index][1]
+  
+        pn_fout.write(f'{vision_test_data[pos_index][1]} {vision_test_data[neg_index][1]} ')
+
         vision_target = vision_test_data[language_index][0].to(device)
         vision_pos = vision_test_data[pos_index][0].to(device)
         vision_neg = vision_test_data[neg_index][0].to(device)
@@ -232,6 +249,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
                 cosine_rank_pos_neg = i
                 break
 
+        pn_fout.write(f'{euclid_rank_pos_neg} {cosine_rank_pos_neg}\n')
+
         reciprocal_sum_euclid_pos_neg += 1 / euclid_rank_pos_neg
         reciprocal_sum_cosine_pos_neg += 1 / cosine_rank_pos_neg
 
@@ -250,6 +269,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
         cosine_distances_random.append(('target', scipy.spatial.distance.cosine(embedded_language, embedded_vision_target)))
 
         for i in random_indexes:
+            rand_fout.write(f'language_test_data[i][1] ')
             vision_data = vision_test_data[i][0].to(device)
             embedded_vision = vision_model(vision_data).cpu().detach().numpy()
             euclidean_distances_random.append(('random', scipy.spatial.distance.euclidean(embedded_language, embedded_vision)))
@@ -271,6 +291,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
                 cosine_rank_random = i
                 break
 
+        rand_fout.write(f'{euclid_rank_random} {cosine_rank_random}\n')
+
         reciprocal_sum_euclid_random += 1 / euclid_rank_random
         reciprocal_sum_cosine_random += 1 / cosine_rank_random
 
@@ -290,6 +312,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     print(f'v_to_l_rand_counts: {v_to_l_rand_counts}')
     print(f'l_to_v_pn_counts: {l_to_v_pn_counts}')
     print(f'l_to_v_rand_counts: {l_to_v_rand_counts}')
+
+    pn_fout.close()
+    rand_fout.close()
 
     return v_to_l_pos_neg, v_to_l_random, l_to_v_pos_neg, l_to_v_random
 
