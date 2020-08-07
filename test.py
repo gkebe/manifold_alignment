@@ -146,9 +146,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         vision = vision.to(device)
         instance_data.extend(instance_name)
         labels.extend(object_name)
-        # language_embeddings.append(language_model(language).cpu().detach().numpy())
-        # vision_embeddings.append(vision_model(vision).cpu().detach().numpy())
-        #
+        language_embeddings.append(language_model(language).cpu().detach().numpy())
+        vision_embeddings.append(vision_model(vision).cpu().detach().numpy())
+        
         # positive_language = language_test_data[pos_neg_examples[i][0]].to(device)
         # negative_language = language_test_data[pos_neg_examples[i][1]].to(device)
         # positive_vision = vision_test_data[pos_neg_examples[i][0]].to(device)
