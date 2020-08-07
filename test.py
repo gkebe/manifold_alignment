@@ -79,7 +79,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     with open(test_data_path, 'rb') as fin:
         test_data = pickle.load(fin)
     train_sampler = SequentialSampler(train_data)
+    test_sampler = SequentialSampler(test_data)
     train_data = DataLoader(train_data, sampler=train_sampler, batch_size=1)
+    test_data = DataLoader(test_data, sampler=test_sampler, batch_size=1)
     language_train_data = [l for l, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
     language_test_data = [l for l, _, _, _ in test_data]
