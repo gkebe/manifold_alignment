@@ -146,16 +146,16 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         vision = vision.to(device)
         instance_data.extend(instance_name)
         labels.extend(object_name)
-        language_embeddings.append(language_model(language).cpu().detach().numpy())
-        vision_embeddings.append(vision_model(vision).cpu().detach().numpy())
-
-        positive_language = language_test_data[pos_neg_examples[i][0]].to(device)
-        negative_language = language_test_data[pos_neg_examples[i][1]].to(device)
-        positive_vision = vision_test_data[pos_neg_examples[i][0]].to(device)
-        negative_vision = vision_test_data[pos_neg_examples[i][1]].to(device)
-
-        language_tests.append(test_language_triplet(language_model(language), language_model(positive_language), language_model(negative_language)))
-        vision_tests.append(test_vision_triplet(vision_model(vision), vision_model(positive_vision), vision_model(negative_vision)))
+        # language_embeddings.append(language_model(language).cpu().detach().numpy())
+        # vision_embeddings.append(vision_model(vision).cpu().detach().numpy())
+        #
+        # positive_language = language_test_data[pos_neg_examples[i][0]].to(device)
+        # negative_language = language_test_data[pos_neg_examples[i][1]].to(device)
+        # positive_vision = vision_test_data[pos_neg_examples[i][0]].to(device)
+        # negative_vision = vision_test_data[pos_neg_examples[i][1]].to(device)
+        #
+        # language_tests.append(test_language_triplet(language_model(language), language_model(positive_language), language_model(negative_language)))
+        # vision_tests.append(test_vision_triplet(vision_model(vision), vision_model(positive_vision), vision_model(negative_vision)))
     print("Finished computing embeddings for test data")
 
     # Convert string labels to ints.
