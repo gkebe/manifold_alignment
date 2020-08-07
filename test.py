@@ -85,9 +85,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     language_test_data = [l for l, _, _, _ in test_data]
     vision_test_data = [v for _, v, _, _ in test_data]
 
-    language_dim = list(language_test_data[0][0].size())[0]
+    language_dim = list(language_test_data[0].size())[0]
     # Eitel dimension
-    vision_dim = list(vision_test_data[0][0].size())[0]
+    vision_dim = list(vision_test_data[0].size())[0]
 
     if pos_neg_examples_file is None:
         print('Calculating examples from scratch...')
