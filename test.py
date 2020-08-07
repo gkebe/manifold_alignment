@@ -13,6 +13,7 @@ from datasets import gl_loaders
 from metrics import corr_between, knn, mean_reciprocal_rank, object_identification_task_classifier
 from models import RowNet
 from utils import get_pos_neg_examples
+from torch.utils.data import (DataLoader, SequentialSampler)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -77,7 +78,8 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
 
     with open(test_data_path, 'rb') as fin:
         test_data = pickle.load(fin)
-
+    train_sampler = SequentialSampler(train_data)
+    train_data = DataLoader(train_data, sampler=train_sampler, batch_size=1)
     language_train_data = [l for l, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
     language_test_data = [l for l, _, _, _ in test_data]
