@@ -44,15 +44,10 @@ def test_language_triplet(anchor, positive, negative):
 
     return positive_distance < negative_distance
 
-def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg_examples_file=None, margin=0.4, seed=None):
+def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg_examples_file=None, margin=0.4, seed=None, embedded_dim=1024):
     gpu_num = int(gpu_num)
     margin = float(margin)
 
-    # BERT dimension
-    language_dim = 3072
-    # Eitel dimension
-    vision_dim = 4096
-    embedded_dim = 1024
 
     # Setup the results and device.
     results_dir = f'./{experiment_name}'
@@ -77,12 +72,20 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         f.write(f'--experiment_name {experiment_name}\n')
         f.write(f'--seed {seed}\n')
 
-    train_data, test_data = gl_loaders(test_data_path, seed=seed)
+    with open(train_data_path, 'rb') as fin:
+        train_data = pickle.load(fin)
+
+    with open(test_data_path, 'rb') as fin:
+        test_data = pickle.load(fin)
 
     language_train_data = [l for l, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
     language_test_data = [l for l, _, _, _ in test_data]
     vision_test_data = [v for _, v, _, _ in test_data]
+
+    language_dim = list(language_test_data[0][0].size())[0]
+    # Eitel dimension
+    vision_dim = list(vision_test_data[0][0].size())[0]
 
     if pos_neg_examples_file is None:
         print('Calculating examples from scratch...')
