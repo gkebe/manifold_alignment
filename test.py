@@ -148,7 +148,7 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         labels.extend(object_name)
         language_embeddings.append(language_model(language).cpu().detach().numpy())
         vision_embeddings.append(vision_model(vision).cpu().detach().numpy())
-        
+
         # positive_language = language_test_data[pos_neg_examples[i][0]].to(device)
         # negative_language = language_test_data[pos_neg_examples[i][1]].to(device)
         # positive_vision = vision_test_data[pos_neg_examples[i][0]].to(device)
@@ -166,6 +166,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     # Concatenate predictions.
     language_embeddings = np.concatenate(language_embeddings, axis=0)
     vision_embeddings = np.concatenate(vision_embeddings, axis=0)
+
+    print(language_embeddings)
+    print(vision_embeddings)
     ab = np.concatenate((language_embeddings, vision_embeddings), axis=0)
 
     # Given language -> nearest vision embeddings
