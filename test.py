@@ -185,9 +185,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     precisions = []
     recalls = []
     f1s = []
-    precisions_binary = []
-    recalls_binary = []
-    f1s_binary = []
+    precisions_macro = []
+    recalls_macro = []
+    f1s_macro = []
     #print(classification_report(oit_res[i], 1/np.arange(1,len(oit_res[i])+1) > 0.01))
     for i in range(len(ground_truth)):
         p, r, f, s = precision_recall_fscore_support(ground_truth[i], predicted[i], warn_for=(), average='micro')
@@ -195,19 +195,19 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         recalls.append(r)
         f1s.append(f)
 
-        p, r, f, s = precision_recall_fscore_support(ground_truth[i], predicted[i], warn_for=(), average='binary')
-        precisions_binary.append(p)
-        recalls_binary.append(r)
-        f1s_binary.append(f)
+        p, r, f, s = precision_recall_fscore_support(ground_truth[i], predicted[i], warn_for=(), average='macro')
+        precisions_macro.append(p)
+        recalls_macro.append(r)
+        f1s_macro.append(f)
 
     # TODO: output to file
     print('\n ')
     print(experiment_name+'_'+str(embedded_dim))
-    print('MRR,    KNN,    Corr,   Mean F1,    Mean F1 (pos only)')
+    print('MRR,    KNN,    Corr,   Mean F1 (Micro),    Mean F1 (Macro)')
     print('%.3g & %.3g & %.3g & %.3g & %.3g' % (
         mean_reciprocal_rank(language_embeddings, vision_embeddings, encoded_labels, cosine=False),
         knn(language_embeddings, vision_embeddings, encoded_labels, k=5, cosine=False),
-        corr_between(language_embeddings, vision_embeddings, cosine=False), np.mean(f1s), np.mean(f1s_binary))
+        corr_between(language_embeddings, vision_embeddings, cosine=False), np.mean(f1s), np.mean(f1s_macro))
     )
 
     # language_accuracy = language_tests.count(True) / len(language_tests)
