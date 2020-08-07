@@ -8,7 +8,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.preprocessing import LabelEncoder
 import torch
 import matplotlib.pyplot as plt
-
+from datasets import GLData
 from datasets import gl_loaders
 from metrics import corr_between, knn, mean_reciprocal_rank, object_identification_task_classifier
 from models import RowNet
