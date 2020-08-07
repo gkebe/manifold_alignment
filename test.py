@@ -51,7 +51,7 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
 
 
     # Setup the results and device.
-    results_dir = f'./{experiment_name}'
+    results_dir = f'./output/{experiment_name}'
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
@@ -94,7 +94,7 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         pos_neg_examples = []
         for anchor_language, _, _, _ in test_data:
             pos_neg_examples.append(get_pos_neg_examples(anchor_language, language_test_data))
-        with open(f'{experiment_name}_test_examples.pkl', 'wb') as fout:
+        with open(f'output/{experiment_name}_test_examples.pkl', 'wb') as fout:
             pickle.dump(pos_neg_examples, fout)
     else:
         print(f'Pulling examples from file {pos_neg_examples_file}...')
