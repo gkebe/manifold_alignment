@@ -118,6 +118,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
         euclidean_distances_pos_neg.sort(key=lambda x: x[1])
         cosine_distances_pos_neg.sort(key=lambda x: x[1])
 
+        # TODO: Possibly need to write out ranks of all tested items
+
         # find rank of closest vision that matches the instance name
         euclid_rank_pos_neg = 3
         for i, (key, distance) in enumerate(euclidean_distances_pos_neg, start=1):
@@ -151,7 +153,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
         cosine_distances_random.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_language_target)))
 
         for i in random_indexes:
-            rand_fout.write(f'language_test_data[i][1] ')
+            rand_fout.write(f'{language_test_data[i][1]} ')
             language_data = language_test_data[i][0].to(device)
             embedded_language = language_model(language_data).cpu().detach().numpy()
             euclidean_distances_random.append(('random', scipy.spatial.distance.euclidean(embedded_vision, embedded_language)))
@@ -269,7 +271,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
         cosine_distances_random.append(('target', scipy.spatial.distance.cosine(embedded_language, embedded_vision_target)))
 
         for i in random_indexes:
-            rand_fout.write(f'language_test_data[i][1] ')
+            rand_fout.write(f'{language_test_data[i][1]} ')
             vision_data = vision_test_data[i][0].to(device)
             embedded_vision = vision_model(vision_data).cpu().detach().numpy()
             euclidean_distances_random.append(('random', scipy.spatial.distance.euclidean(embedded_language, embedded_vision)))
