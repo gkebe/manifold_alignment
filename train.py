@@ -170,8 +170,6 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
             triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
 
             rand_int = random.randint(1, 8)
-
-            # Determine triplets based on epoch + index (mod 4)
             if rand_int == 1:
                 anchor = vision.to(device)
                 positive = vision_pos_examples.to(device)
