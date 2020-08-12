@@ -5,7 +5,10 @@ import random
 
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader, SequentialSampler
 #import torchaudio
+
+from datasets import GLData
 
 class RowNet(torch.nn.Module):
     def __init__(self, input_size, embed_dim=1024):
@@ -50,12 +53,12 @@ class RNN(torch.nn.Module):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_agrument('--experiment', help='path to experiment output')
+    parser.add_argument('--experiment', help='path to experiment output')
     parser.add_argument('--epochs', default=1, type=int,
         help='number of epochs to train')
     parser.add_argument('--train_data', help='path to train data')
     #parser.add_argument('--gpu_num', default='0', help='gpu id number')
-    parser.add_argument('--pos_neg_examples_file', default=None,
+    parser.add_argument('--pos_neg_examples_file',
         help='path to pos/neg examples pkl')
     parser.add_argument('--seed', type=int, default=75,
         help='random seed for reproducability')
@@ -74,20 +77,13 @@ def lr_lambda(e):
     else:
         return 0.00001
 
-def fetch_pos_neg_examples(pos_neg_examples_file, speech_train_data, train_data):
-    if pos_neg_examples_file is None:
-        print('Calculating examples from scratch...')
-        pos_neg_examples = []
-        for anchor_speech, _, _, _ in train_data:
-            pos_neg_examples.append(get_pos_neg_example(anchor_speech, speech_train_data))
-        with open(f'pos_neg_examples.pkl', 'wb') as fout:
-            pickle.dump(pos_neg_examples, fout)
-    else:
-        print(f'Pulling examples from file {pos_neg_examples_file}...')
-        with open(pos_neg_examples_file, 'rb') as fin:
-            pos_neg_examples = pickle.load(fin)
-
-    return pos_neg_examples
+def get_examples_batch(pos_neg_examples, indices, train_data):
+    examples = [pos_neg_examples[i] for i in indices]
+    
+    return (
+        torch.stack([train_data[i[0]] for i in examples]),
+        torch.stack([train_data[i[1]] for i in examples])
+    )
 
 def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, seed, margin=0.4):
 
@@ -97,19 +93,33 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     train_results_dir = os.path.join(results_dir, 'train_results/')
     os.makedirs(train_results_dir, exist_ok=True)
 
-    device = torch.device('cuda:0')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    with open(ARGS.train_data, 'rb') as fin:
+    with open(train_data_path, 'rb') as fin:
         train_data = pickle.load(fin)
 
     speech_train_data = [s for s, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
 
-    pos_neg_examples = fetch_pos_neg_examples(pos_neg_examples_file, speech_train_data, train_data)
+    with open(pos_neg_examples_file, 'rb') as fin:
+        pos_neg_examples = pickle.load(fin)
 
-    speech_model = RNN()
+    # TODO: grab speech dimension from speech data tensor
+    # TODO: set some of these from ARGS
+    speech_dim = 40
+    speech_model = RNN(
+        input_size=40,
+        output_size=embedded_dim,
+        hidden_dim=64,
+        n_layers=1,
+        drop_out=0.0,
+        device=device
+    )
     vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+
+    train_sampler = SequentialSampler(train_data)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
 
     if os.path.exists(os.path.join(train_results_dir, 'speech_model.pt')) and os.path.exists(os.path.join(train_results_dir, 'vision_model.pt')):
         print('Starting from pretrained networks.')
@@ -126,7 +136,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=0.001)
     vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
 
-    speech_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
+    speech_scheduler = torch.optim.lr_scheduler.LambdaLR(speech_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
 
     speech_model.train()
@@ -140,15 +150,33 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         for step, batch in enumerate(train_dataloader):
             speech, vision, object_name, instance_name = batch
 
-            # TODO: source pos/neg examples
-            speech_pos, speech_neg = None, None
-            vision_pos, vision_neg = None, None
+            indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
+            speech_pos, speech_neg = get_examples_batch(pos_neg_examples, indices, speech_train_data)
+            vision_pos, vision_neg = get_examples_batch(pos_neg_examples, indices, vision_train_data)
 
             speech_optimizer.zero_grad()
             vision_optimizer.zero_grad()
 
             # TODO: still using triplet loss?
             triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
+
+            # TODO: JANKY STUFF FOR TENSOR SIZING AND ORDER ERRORS
+            speech = speech[0].permute(0, 2, 1)
+            speech_pos = speech_pos[0].permute(0, 2, 1)
+            speech_neg = speech_neg[0].permute(0, 2, 1)
+
+            # TODO: If batching, need to pad step dim with 0s to
+            #   match the max step size
+
+            #print('SPEECH SIZES')
+            #print(speech.size())
+            #print(speech_pos.size())
+            #print(speech_neg.size())
+
+            #print('VISION SIZES')
+            #print(vision.size())
+            #print(vision_pos.size())
+            #print(vision_neg.size())
 
             # Randomly choose triplet case
             case = random.randint(1, 8)
@@ -205,7 +233,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             speech_optimizer.step()
             vision_optimizer.step()
 
-            batch_loss.apend(loss.item())
+            batch_loss.append(loss.item())
             epoch_loss += loss.item()
             avg_epoch_loss.append(epoch_loss / len(train_data))
 
@@ -220,7 +248,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         with open(os.path.join(train_results_dir, 'batch_loss.pkl'), 'wb') as fout:
             pickle.dump(batch_loss, fout)
 
-        with open(os.path.join(train_results_dir, 'avg_epoch_loss.pkl'), 'wb' as fout:
+        with open(os.path.join(train_results_dir, 'avg_epoch_loss.pkl'), 'wb') as fout:
             pickle.dump(avg_epoch_loss, fout)
 
         print('***** epoch is finished *****')
@@ -239,11 +267,10 @@ def main():
         ARGS.epochs,
         ARGS.train_data,
         ARGS.pos_neg_examples_file,
-        ARGS.batch_size
+        ARGS.batch_size,
         ARGS.embedded_dim,
         ARGS.seed,
     )
-        batch_size
 
 if __name__ == '__main__':
     main()
