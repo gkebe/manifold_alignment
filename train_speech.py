@@ -57,7 +57,7 @@ def parse_args():
     parser.add_argument('--epochs', default=1, type=int,
         help='number of epochs to train')
     parser.add_argument('--train_data', help='path to train data')
-    #parser.add_argument('--gpu_num', default='0', help='gpu id number')
+    parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--pos_neg_examples_file',
         help='path to pos/neg examples pkl')
     parser.add_argument('--seed', type=int, default=75,
@@ -85,7 +85,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data):
         torch.stack([train_data[i[1]] for i in examples])
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, seed, margin=0.4):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, margin=0.4):
 
     results_dir = f'./output/{experiment_name}'
     os.makedirs(results_dir, exist_ok=True)
@@ -269,6 +269,7 @@ def main():
         ARGS.pos_neg_examples_file,
         ARGS.batch_size,
         ARGS.embedded_dim,
+        ARGS.gpu_num,
         ARGS.seed,
     )
 
