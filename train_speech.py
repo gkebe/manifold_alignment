@@ -93,7 +93,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     train_results_dir = os.path.join(results_dir, 'train_results/')
     os.makedirs(train_results_dir, exist_ok=True)
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu')
 
     with open(train_data_path, 'rb') as fin:
         train_data = pickle.load(fin)
