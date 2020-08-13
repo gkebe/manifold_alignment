@@ -67,6 +67,9 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
     language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
     vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
+    if torch.cuda.is_available():
+        language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
+        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt'), map_location=device))
     language_model.to(device)
     vision_model.to(device)
     language_model.eval()
