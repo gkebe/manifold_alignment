@@ -6,6 +6,7 @@ import random
 
 import scipy
 import scipy.spatial
+import torch
 
 from datasets import GLData
 from rnn import RNN
@@ -36,20 +37,23 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
     speech_test_data = [(s, i) for s, _, _, i in test_data]
     vision_test_data = [(v, i) for _, v, _, i in test_data]
 
+    print(len(speech_test_data))
+    print(len(vision_test_data))
+
     vision_dim = list(vision_test_data[0][0].size())[0]
 
     results_dir = f'./output/{experiment}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
 
     print(f'is_available(): {torch.cuda.is_available()}')
-    device_name = f'cuda:{gpu_num' if torch.cuda.is_available() else 'cpu'
+    device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
 
-    speech_model = None
-    vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+    speech_model = RNN(40, embedded_dim, 64, 1, 0.0, device)
+    vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
-    vision_model.load(state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt'), map_location=device))
+    vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt'), map_location=device))
     speech_model.to(device)
     vision_model.to(device)
     speech_model.eval()
@@ -77,15 +81,22 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
         neg_index = pos_neg_examples[vision_index][1]
 
         speech_target = speech_test_data[vision_index][0].to(device)
+        #print(speech_target.size())
         speech_pos = speech_test_data[pos_index][0].to(device)
         speech_neg = speech_test_data[neg_index][0].to(device)
+
+        # TODO: THIS SHOULD BE HANDLED WHEN CREATING THE FEATURES
+        speech_target = speech_target.permute(0, 2, 1)
+        speech_pos = speech_pos.permute(0, 2, 1)
+        speech_neg = speech_neg.permute(0, 2, 1)
+
         embedded_speech_target = speech_model(speech_target).cpu().detach().numpy()
         embedded_speech_pos = speech_model(speech_pos).cpu().detach().numpy()
         embedded_speech_neg = speech_model(speech_neg).cpu().detach().numpy()
 
         cosine_distances_pn.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_target), vision[1]))
-        cosine_distances_pn.append(('pos', scipy.spatial.distnace.cosine(embedded_vision, embedded_speech_pos), speech_test_data[pos_index][1]))
-        cosine_distnaces_pn.append(('neg', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_neg), speech_test_data[neg_index][1]))
+        cosine_distances_pn.append(('pos', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_pos), speech_test_data[pos_index][1]))
+        cosine_distances_pn.append(('neg', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_neg), speech_test_data[neg_index][1]))
 
         cosine_distances_pn.sort(key=lambda x: x[1])
         rank_pn = len(cosine_distances_pn)
@@ -103,13 +114,15 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
         # Random MRR evaluation
         #
 
-        consine_distances_rand = []
+        cosine_distances_rand = []
         random_indexes = random.sample(range(len(speech_test_data)), 4)
 
         cosine_distances_rand.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_target), vision[1]))
 
         for i in random_indexes:
             speech_data = speech_test_data[i][0].to(device)
+            # TODO: SHOULD BE HANDLED WHEN CREATING FEATURES
+            speech_data = speech_data.permute(0, 2, 1)
             embedded_speech = speech_model(speech_data).cpu().detach().numpy()
             cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_vision, embedded_speech), speech_test_data[i][1]))
 
@@ -125,86 +138,94 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
         reciprocal_sum_rand += 1 / rank_rand
         v_to_s_rand_counts[rank_rand] += 1
 
+
         v_to_s_mrr_pn = reciprocal_sum_pn / len(speech_test_data)
         v_to_s_mrr_rand = reciprocal_sum_rand / len(speech_test_data)
 
-        # Speech to Vision
-        reciprocal_sum_pn = 0
-        reciprocal_sum_rand = 0
-        s_to_v_pn_counts = defaultdict(int)
-        s_to_v_rand_counts = defaultdict(int)
-        for speech_index, speech in enumerate(speech_test_data):
-            pn_fout.write(f'S->V,')
-            rand_fout.write(f'S->V,')
+    # Speech to Vision
+    reciprocal_sum_pn = 0
+    reciprocal_sum_rand = 0
+    s_to_v_pn_counts = defaultdict(int)
+    s_to_v_rand_counts = defaultdict(int)
+    for speech_index, speech in enumerate(speech_test_data):
+        pn_fout.write(f'S->V,')
+        rand_fout.write(f'S->V,')
 
-            speech_data = speech[0].to(device)
-            embedded_speech = speech_model(speech_data).cpu().detach().numpy()
+        speech_data = speech[0].to(device)
+        # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
+        speech_data = speech_data.permute(0, 2, 1)
+        embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
-            #
-            # Pos/Neg MRR evaluation
-            #
+        #
+        # Pos/Neg MRR evaluation
+        #
 
-            cosine_distances_pn = []
+        cosine_distances_pn = []
 
-            pos_index = pos_neg_examples[speech_index][0]
-            neg_index = pos_neg_examples[speech_index][1]
+        pos_index = pos_neg_examples[speech_index][0]
+        neg_index = pos_neg_examples[speech_index][1]
 
-            vision_target = vision_test_data[speech_index][0].to(device)
-            vision_pos = vision_test_data[pos_index][0].to(device)
-            vision_neg = vision_test_data[neg_index][0].to(device)
-            embedded_vision_target = vision_model(vision_target).cpu().detach().numpy()
-            embedded_vision_pos = vision_model(vision_pos).cpu().detach().numpy()
-            embedded_vision_neg = vision_model(vision_neg).cpu().detach().numpy()
+        vision_target = vision_test_data[speech_index][0].to(device)
+        vision_pos = vision_test_data[pos_index][0].to(device)
+        vision_neg = vision_test_data[neg_index][0].to(device)
+        embedded_vision_target = vision_model(vision_target).cpu().detach().numpy()
+        embedded_vision_pos = vision_model(vision_pos).cpu().detach().numpy()
+        embedded_vision_neg = vision_model(vision_neg).cpu().detach().numpy()
 
-            cosine_distances_pn.append(('target', scipy.spatial.distance.cosine(embedded_speech, embeeded_vision_target), speech[1]))
-            cosine_distances_pn.append(('pos', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_pos), vision_test_data[pos_index][1]))
-            cosine_distances_pn.append(('neg', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_neg), vision_test_data[neg_index][1]))
+        cosine_distances_pn.append(('target', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_target), speech[1]))
+        cosine_distances_pn.append(('pos', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_pos), vision_test_data[pos_index][1]))
+        cosine_distances_pn.append(('neg', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_neg), vision_test_data[neg_index][1]))
 
-            cosine_distances_pn.sort(key=lambda x: x[1])
-            rank_pn = len(cosine_distances_pn)
-            for i, (key, distance, instance_name) in enumerate(cosine_distances_pn, start=1):
-                pn_fout.write(f'{instance_name},{distance},')
-                if key == 'target':
-                    rank_pn = i
+        cosine_distances_pn.sort(key=lambda x: x[1])
+        rank_pn = len(cosine_distances_pn)
+        for i, (key, distance, instance_name) in enumerate(cosine_distances_pn, start=1):
+            pn_fout.write(f'{instance_name},{distance},')
+            if key == 'target':
+                rank_pn = i
 
-            pn_fout.write(f'{rank_pn}\n')
+        pn_fout.write(f'{rank_pn}\n')
 
-            reciprocal_sum_pn += 1 / rank_pn
-            s_to_v_pn_counts[rank_pn] += 1
+        reciprocal_sum_pn += 1 / rank_pn
+        s_to_v_pn_counts[rank_pn] += 1
 
-            #
-            # Random MRR evaluation
-            #
+        #
+        # Random MRR evaluation
+        #
 
-            cosine_distances_rand = []
-            random_indexes = random.sample(range(len(vision_test_data)), 4)
+        cosine_distances_rand = []
+        random_indexes = random.sample(range(len(vision_test_data)), 4)
 
-            cosine_distances_rand.append(('target', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_target), speech[1]))
+        cosine_distances_rand.append(('target', scipy.spatial.distance.cosine(embedded_speech, embedded_vision_target), speech[1]))
 
-            for i in random_indexes:
-                vision_data = vision_test_data[i][0].to(device)
-                embedded_vision = vision_model(vision_data).cpu().detach().numpy()
-                cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_speech, embedded_vision), vision_test_data[i][1]))
+        for i in random_indexes:
+            vision_data = vision_test_data[i][0].to(device)
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+            cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_speech, embedded_vision), vision_test_data[i][1]))
 
-            cosine_distances_rand.sort(key=lambda x: x[1])
-            rank_rand = len(cosine_distances_rand)
-            for i, (key, distance, instance_name) in enumerate(cosine_distances_rand, start=1):
-                rand_fout.write(f'{instance_name},{distance},')
-                if key == 'target':
-                    rank_rand = i
+        cosine_distances_rand.sort(key=lambda x: x[1])
+        rank_rand = len(cosine_distances_rand)
+        for i, (key, distance, instance_name) in enumerate(cosine_distances_rand, start=1):
+            rand_fout.write(f'{instance_name},{distance},')
+            if key == 'target':
+                rank_rand = i
 
-            rand_fout.write(f'{rank_rand}')
+        rand_fout.write(f'{rank_rand}')
 
-            reciprocal_sum_rand += 1 / rank_rand
-            s_to_v_rand_counts[rank_rand] += 1
+        reciprocal_sum_rand += 1 / rank_rand
+        s_to_v_rand_counts[rank_rand] += 1
 
-            s_to_v_mrr_pn = reciprocal_sum_pn / len(vision_test_data)
-            s_to_v_mrr_rand = reciprocal_sum_rand / len(vision_test_data)
+        s_to_v_mrr_pn = reciprocal_sum_pn / len(vision_test_data)
+        s_to_v_mrr_rand = reciprocal_sum_rand / len(vision_test_data)
 
-            pn_fout.close()
-            rand_fout.close()
 
-            return v_to_s_mrr_pn, v_to_s_mrr_rand, s_to_v_mrr_pn, s_to_v_mrr_rand
+    print(f'V->S counts pn: {dict(v_to_s_pn_counts)}')
+    print(f'V->S counts rand: {dict(v_to_s_rand_counts)}')
+    print(f'S->V counts pn: {dict(s_to_v_pn_counts)}')
+    print(f'S->V counts rand: {dict(s_to_v_rand_counts)}')
+    pn_fout.close()
+    rand_fout.close()
+
+    return v_to_s_mrr_pn, v_to_s_mrr_rand, s_to_v_mrr_pn, s_to_v_mrr_rand
 
 def main():
     ARGS, unused = parse_args()
