@@ -209,7 +209,7 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
             if key == 'target':
                 rank_rand = i
 
-        rand_fout.write(f'{rank_rand}')
+        rand_fout.write(f'{rank_rand}\n')
 
         reciprocal_sum_rand += 1 / rank_rand
         s_to_v_rand_counts[rank_rand] += 1
