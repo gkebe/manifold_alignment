@@ -10,6 +10,7 @@ import torch
 import torch.nn.functional as F
 
 from datasets import GLData
+from rownet import RowNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -23,21 +24,6 @@ def parse_args():
         help='embedded_dim')
 
     return parser.parse_known_args()
-
-class RowNet(torch.nn.Module):
-    def __init__(self, input_size, embed_dim=1024):
-        # Language (BERT): 3072, Vision+Depth (ResNet152): 2048 * 2.
-        super(RowNet, self).__init__()
-        self.fc1 = torch.nn.Linear(input_size, input_size)
-        self.fc2 = torch.nn.Linear(input_size, input_size)
-        self.fc3 = torch.nn.Linear(input_size, embed_dim)
-
-    def forward(self, x):
-        x = F.leaky_relu(self.fc1(x), negative_slope=.2)
-        x = F.leaky_relu(self.fc2(x), negative_slope=.2)
-        x = self.fc3(x)
-
-        return x
 
 def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim):
 
