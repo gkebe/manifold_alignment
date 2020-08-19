@@ -9,47 +9,9 @@ from torch.utils.data import DataLoader, SequentialSampler
 #import torchaudio
 
 from datasets import GLData
-
-class RowNet(torch.nn.Module):
-    def __init__(self, input_size, embed_dim=1024):
-        super(RowNet, self).__init__()
-        self.fc1 = torch.nn.Linear(input_size, input_size)
-        self.fc2 = torch.nn.Linear(input_size, input_size)
-        self.fc3 = torch.nn.Linear(input_size, embed_dim)
-
-    def forward(self, x):
-        x = F.leaky_relu(self.fc1(x), negative_slope=.2)
-        x = F.leaky_relu(self.fc2(x), negative_slope=.2)
-        x = self.fc3(x)
-
-        return x
-
-# TODO: might want to try an LSTM
-class RNN(torch.nn.Module):
-    def __init__(self, input_size, output_size, hidden_dim, n_layers,
-            drop_out, device):
-        super(RNN, self).__init__()
-        self.device = device
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-
-        # Model layers
-        self.rnn = torch.nn.RNN(input_size, hidden_dim, n_layers,
-            batch_first=True, dropout=drop_out)
-        self.fc = torch.nn.Linear(hidden_dim, output_size)
-
-    def forward(self, x):
-        batch_size = x.size(0)
-        hidden = torch.zeros(self.n_layers, batch_size,
-            self.hidden_dim).to(self.device)
-        _, hidden = self.rnn(x, hidden)
-
-        # This does some reshaping, might be an old idiom
-        # see: https://discuss.pytorch.org/t/when-and-why-do-we-use-contiguous/47588
-        hidden = hidden.contiguous().view(-1, self.hidden_dim)
-        hidden = self.fc(hidden)
-    
-        return hidden
+from lstm import LSTM
+from rnn import RNN
+from rownet import RowNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -108,12 +70,12 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: grab speech dimension from speech data tensor
     # TODO: set some of these from ARGS
     speech_dim = 40
-    speech_model = RNN(
+    speech_model = LSTM(
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
         n_layers=1,
-        drop_out=0.0,
+        dropout=0.0,
         device=device
     )
     vision_dim = list(vision_train_data[0].size())[0]
@@ -160,8 +122,9 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             # TODO: still using triplet loss?
             triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
-
+            
             # TODO: JANKY STUFF FOR TENSOR SIZING AND ORDER ERRORS
+            # this has to do with the batch_first param of the RNN
             speech = speech[0].permute(0, 2, 1)
             speech_pos = speech_pos[0].permute(0, 2, 1)
             speech_neg = speech_neg[0].permute(0, 2, 1)
