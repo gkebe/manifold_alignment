@@ -79,7 +79,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         device=device
     )
     vision_dim = list(vision_train_data[0].size())[0]
-    vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+    vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
