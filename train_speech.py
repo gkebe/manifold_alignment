@@ -31,13 +31,16 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def lr_lambda(e):
-    if e < 20:
-        return 0.001
-    elif e < 40:
-        return 0.0001
-    else:
-        return 0.00001
+#def lr_lambda(e):
+#    if e < 20:
+#        return 0.001
+#    elif e < 40:
+#        return 0.0001
+#    else:
+#        return 0.00001
+
+def lr_lambda(epoch):
+    return .95 ** epoch
 
 def get_examples_batch(pos_neg_examples, indices, train_data):
     examples = [pos_neg_examples[i] for i in indices]
@@ -199,7 +202,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             batch_loss.append(loss.item())
             epoch_loss += loss.item()
-            avg_epoch_loss.append(epoch_loss / len(train_data))
 
             if not step % (len(train_data) // 32):
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
@@ -212,9 +214,10 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         with open(os.path.join(train_results_dir, 'batch_loss.pkl'), 'wb') as fout:
             pickle.dump(batch_loss, fout)
 
+        avg_epoch_loss.append(epoch_loss / len(train_data))
         with open(os.path.join(train_results_dir, 'avg_epoch_loss.pkl'), 'wb') as fout:
             pickle.dump(avg_epoch_loss, fout)
-
+        
         print('***** epoch is finished *****')
         print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
 
@@ -222,6 +225,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         vision_scheduler.step()
 
     print('Training done!')
+
 
 def main():
     ARGS, unused = parse_args()

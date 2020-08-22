@@ -9,6 +9,7 @@ import scipy.spatial
 import torch
 
 from datasets import GLData
+from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
 
@@ -49,7 +50,14 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
 
-    speech_model = RNN(40, embedded_dim, 64, 1, 0.0, device)
+    speech_model = LSTM(
+        input_size=40,
+        output_size=embedded_dim,
+        hidden_dim=64,
+        num_layers=1,
+        dropout=0.0,
+        device=device
+    )
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
