@@ -3,6 +3,8 @@ import os
 import pickle
 import random
 
+import scipy
+import scipy.spatial
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, SequentialSampler
@@ -42,12 +44,14 @@ def parse_args():
 def lr_lambda(epoch):
     return .95 ** epoch
 
-def get_examples_batch(pos_neg_examples, indices, train_data):
+def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
     
     return (
         torch.stack([train_data[i[0]] for i in examples]),
-        torch.stack([train_data[i[1]] for i in examples])
+        torch.stack([train_data[i[1]] for i in examples]),
+        [instance_names[i[0]] for i in examples][0],
+        [instance_names[i[1]] for i in examples][0],
     )
 
 def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, margin=0.4):
@@ -58,6 +62,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     train_results_dir = os.path.join(results_dir, 'train_results/')
     os.makedirs(train_results_dir, exist_ok=True)
 
+    train_fout = open(os.path.join(train_results_dir, 'train_out.txt'), 'w')
+
     print(f'cuda:{gpu_num}; cuda is available? {torch.cuda.is_available()}')
     device = torch.device(f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu')
 
@@ -66,6 +72,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
     speech_train_data = [s for s, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
+    instance_names = [i for _, _, _, i in train_data]
 
     with open(pos_neg_examples_file, 'rb') as fin:
         pos_neg_examples = pickle.load(fin)
@@ -111,14 +118,17 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     batch_loss = []
     avg_epoch_loss = []
 
+    train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in range(epochs):
         epoch_loss = 0.0
         for step, batch in enumerate(train_dataloader):
+            train_fout.write(f'{epoch},{step},')
             speech, vision, object_name, instance_name = batch
+            train_fout.write(f'{instance_name[0]},')
 
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
-            speech_pos, speech_neg = get_examples_batch(pos_neg_examples, indices, speech_train_data)
-            vision_pos, vision_neg = get_examples_batch(pos_neg_examples, indices, vision_train_data)
+            speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = get_examples_batch(pos_neg_examples, indices, speech_train_data, instance_names)
+            vision_pos, vision_neg, vision_pos_instance, vision_neg_instance = get_examples_batch(pos_neg_examples, indices, vision_train_data, instance_names)
 
             speech_optimizer.zero_grad()
             vision_optimizer.zero_grad()
@@ -148,53 +158,54 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             # Randomly choose triplet case
             case = random.randint(1, 8)
             if case == 1:
-                loss = triplet_loss(
-                    vision_model(vision.to(device)),
-                    vision_model(vision_pos.to(device)),
-                    vision_model(vision_neg.to(device))
-                )
+                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},vvv,')
+                target = vision_model(vision.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
+                loss = triplet_loss(target, pos, neg)
             elif case == 2:
-                loss = triplet_loss(
-                    speech_model(speech.to(device)),
-                    speech_model(speech_pos.to(device)),
-                    speech_model(speech_neg.to(device))
-                )
+                train_fout.write(f'{speech_pos_instance},{speech_neg_instance},sss,')
+                target = speech_model(speech.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
             elif case == 3:
-                loss = triplet_loss(
-                    vision_model(vision.to(device)),
-                    speech_model(speech_pos.to(device)),
-                    speech_model(speech_neg.to(device))
-                )
+                train_fout.write(f'{speech_pos_instance},{speech_neg_instance},vss,')
+                target = vision_model(vision.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
             elif case == 4:
-                loss = triplet_loss(
-                    speech_model(speech.to(device)),
-                    vision_model(vision_pos.to(device)),
-                    vision_model(vision_neg.to(device))
-                )
+                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},svv,')
+                target = speech_model(speech.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
             elif case == 5:
-                loss = triplet_loss(
-                    vision_model(vision.to(device)),
-                    vision_model(vision_pos.to(device)),
-                    speech_model(speech_neg.to(device))
-                )
+                train_fout.write(f'{vision_pos_instance},{speech_neg_instance},vvs,')
+                target = vision_model(vision.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
             elif case == 6:
-                loss = triplet_loss(
-                    speech_model(speech.to(device)),
-                    speech_model(speech_pos.to(device)),
-                    vision_model(vision_neg.to(device))
-                )
+                train_fout.write(f'{speech_pos_instance},{vision_neg_instance},ssv,')
+                target = speech_model(speech.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
             elif case == 7:
-                loss = triplet_loss(
-                    vision_model(vision.to(device)),
-                    speech_model(speech_pos.to(device)),
-                    vision_model(vision_neg.to(device))
-                )
+                train_fout.write(f'{speech_pos_instance},{vision_neg_instance},vsv,')
+                target = vision_model(vision.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
             elif case == 8:
-                loss = triplet_loss(
-                    speech_model(speech.to(device)),
-                    vision_model(vision_pos.to(device)),
-                    speech_model(speech_neg.to(device))
-                )
+                train_fout.write(f'{vision_pos_instance},{speech_neg_instance},svs,')
+                target = speech_model(speech.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
+
+            loss = triplet_loss(target, pos, neg)
+            target = target.cpu().detach().numpy()
+            pos = pos.cpu().detach().numpy()
+            neg = neg.cpu().detach().numpy()
+            pos_dist = scipy.spatial.distance.cosine(target, pos)
+            neg_dist = scipy.spatial.distance.cosine(target, neg)
+            train_fout.write(f'{pos_dist},{neg_dist},')
 
             loss.backward()
             speech_optimizer.step()
@@ -202,6 +213,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             batch_loss.append(loss.item())
             epoch_loss += loss.item()
+
+            train_fout.write(f'{loss.item()}\n')
 
             if not step % (len(train_data) // 32):
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
@@ -225,6 +238,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         vision_scheduler.step()
 
     print('Training done!')
+    train_fout.close()
 
 
 def main():
