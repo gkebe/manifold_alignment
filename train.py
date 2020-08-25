@@ -7,13 +7,17 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy
+import scipy.spatial
 from sklearn.metrics import precision_recall_fscore_support
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 from torch.utils.data import (DataLoader, SequentialSampler)
+
 from datasets import gl_loaders, GLData
 from losses import triplet_loss_vanilla
+from rownet import RowNet
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 
 def parse_args():
@@ -37,21 +41,6 @@ def parse_args():
 
     return parser.parse_known_args()
 
-class RowNet(torch.nn.Module):
-    def __init__(self, input_size, embed_dim=1024):
-        # Language (BERT): 3072, Vision+Depth (ResNet152): 2048 * 2.
-        super(RowNet, self).__init__()
-        self.fc1 = torch.nn.Linear(input_size, input_size)
-        self.fc2 = torch.nn.Linear(input_size, input_size)
-        self.fc3 = torch.nn.Linear(input_size, embed_dim)
-
-    def forward(self, x):
-        x = F.leaky_relu(self.fc1(x), negative_slope=.2)
-        x = F.leaky_relu(self.fc2(x), negative_slope=.2)
-        x = self.fc3(x)
-
-        return x
-
 # Add learning rate scheduling.
 def lr_lambda(e):
     if e < 20:
@@ -61,10 +50,15 @@ def lr_lambda(e):
     else:
         return 0.00001
 
-def get_examples_batch(pos_neg_examples,indices,train_data):
+def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
-    return torch.stack([train_data[i[0]] for i in examples]), torch.stack([train_data[i[1]] for i in examples])
 
+    return (
+        torch.stack([train_data[i[0]] for i in examples]),
+        torch.stack([train_data[i[1]] for i in examples]),
+        [instance_names[i[0]] for i in examples][0],
+        [instance_names[i[0]] for i in examples][0],
+    )
 
 def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
     """Train joint embedding networks."""
@@ -81,6 +75,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
     language_train_data = [l for l, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
+    instance_names = [i for _, _, _, i in train_data]
 
     # BERT dimension
     language_dim = list(language_train_data[0].size())[0]
@@ -89,12 +84,12 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
+    os.makedirs(results_dir, exist_ok=True)
 
     train_results_dir = os.path.join(results_dir, 'train_results/')
-    if not os.path.exists(train_results_dir):
-        os.makedirs(os.path.join(train_results_dir))
+    os.makedirs(os.path.join(train_results_dir), exist_ok=True)
+
+    train_fout = open(os.path.join(train_results_dir, 'train_out.txt'), 'w')
 
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
@@ -121,8 +116,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
         with open(pos_neg_examples_file, 'rb') as fin:
             pos_neg_examples = pickle.load(fin)
 
-    language_model = RowNet(language_dim, embed_dim=embedded_dim)
-    vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+    language_model = RowNet(language_dim, embedded_dim=embedded_dim)
+    vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
 
@@ -155,14 +150,17 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     batch_loss = []
     avg_epoch_loss = []
 
+    train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+            train_fout.write(f'{epoch},{step},')
         #for i, (language, vision, object_name, instance_name) in enumerate(train_data):
             language, vision, object_name, instance_name = batch
+            train_fout.write(f'{instance_name[0]},')
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
-            language_pos_examples, language_neg_examples = get_examples_batch(pos_neg_examples,indices,language_train_data)
-            vision_pos_examples, vision_neg_examples = get_examples_batch(pos_neg_examples,indices,vision_train_data)
+            language_pos_examples, language_neg_examples, language_pos_instance, language_neg_instance = get_examples_batch(pos_neg_examples,indices,language_train_data, instance_names)
+            vision_pos_examples, vision_neg_examples, vision_pos_instance, vision_neg_instance = get_examples_batch(pos_neg_examples,indices,vision_train_data, instance_names)
         #print(f'Training {i}...')
             # Zero the parameter gradients.
             language_optimizer.zero_grad()
@@ -171,52 +169,54 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
             rand_int = random.randint(1, 8)
             if rand_int == 1:
-                anchor = vision.to(device)
-                positive = vision_pos_examples.to(device)
-                negative = vision_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), vision_model(positive), vision_model(negative))
-
+                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},vvv,')
+                target = vision_model(vision.to(device))
+                pos = vision_model(vision_pos_examples.to(device))
+                neg = vision_model(vision_neg_examples.to(device))
             elif rand_int == 2:
-                anchor = language.to(device)
-                positive = language_pos_examples.to(device)
-                negative = language_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), language_model(positive), language_model(negative))
-
+                train_fout.write(f'{language_pos_instance},{language_neg_instance},lll,')
+                target = language_model(language.to(device))
+                pos = language_model(language_pos_examples.to(device))
+                neg = language_model(language_neg_examples.to(device))
             elif rand_int == 3:
-                anchor = vision.to(device)
-                positive = language_pos_examples.to(device)
-                negative = language_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), language_model(positive), language_model(negative))
-
+                train_fout.write(f'{language_pos_instance},{language_neg_instance},vll')
+                target = vision_model(vision.to(device))
+                pos = language_model(language_pos_examples.to(device))
+                neg = language_model(language_neg_examples.to(device))
             elif rand_int == 4:
-                anchor = language.to(device)
-                positive = vision_pos_examples.to(device)
-                negative = vision_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), vision_model(positive), vision_model(negative))
-
+                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},lvv')
+                target = language_model(language.to(device))
+                pos = vision_model(vision_pos_examples.to(device))
+                neg = vision_model(vision_neg_examples.to(device))
             elif rand_int == 5:
-                anchor = vision.to(device)
-                positive = vision_pos_examples.to(device)
-                negative = language_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), vision_model(positive), language_model(negative))
-
+                train_fout.write(f'{vision_pos_instance},{language_neg_instance},vvl')
+                target = vision_model(vision.to(device))
+                pos = vision_model(vision_pos_examples.to(device))
+                neg = language_model(language_neg_examples.to(device))
             elif rand_int == 6:
-                anchor = language.to(device)
-                positive = language_pos_examples.to(device)
-                negative = vision_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), language_model(positive), vision_model(negative))
-
+                train_fout.write(f'{language_pos_instance},{vision_neg_instance},llv')
+                target = language_model(language.to(device))
+                pos = language_model(language_pos_examples.to(device))
+                neg = vision_model(vision_neg_examples.to(device))
             elif rand_int == 7:
-                anchor = vision.to(device)
-                positive = language_pos_examples.to(device)
-                negative = vision_neg_examples.to(device)
-                loss = triplet_loss(vision_model(anchor), language_model(positive), vision_model(negative))
-
+                train_fout.write(f'{language_pos_instance},{vision_neg_instance},vlv')
+                target = vision_model(vision.to(device))
+                pos = language_model(language_pos_examples.to(device))
+                neg = vision_model(vision_neg_examples.to(device))
             elif rand_int == 8:
-                anchor = language.to(device)
-                positive = vision_pos_examples.to(device)
-                negative = language_neg_examples.to(device)
-                loss = triplet_loss(language_model(anchor), vision_model(positive), language_model(negative))
+                train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
+                target = language_model(language.to(device))
+                pos = vision_model(vision_pos_examples.to(device))
+                neg = language_model(language_neg_examples.to(device))
+            
+            loss = triplet_loss(target, pos, neg)
+
+            target = target.cpu().detach().numpy()
+            pos = pos.cpu().detach().numpy()
+            neg = neg.cpu().detach().numpy()
+            pos_dist = scipy.spatial.distance.cosine(target, pos)
+            neg_dist = scipy.spatial.distance.cosine(target, neg)
+            train_fout.write(f'{pos_dist},{neg_dist},{loss.item()}\n')
 
             loss.backward()
             vision_optimizer.step()
@@ -268,6 +268,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
         vision_scheduler.step()
 
     print('Training Done!')
+    train_fout.close()
 
 def main():
     ARGS, unused = parse_args()

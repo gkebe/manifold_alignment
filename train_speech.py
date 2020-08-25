@@ -205,7 +205,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             neg = neg.cpu().detach().numpy()
             pos_dist = scipy.spatial.distance.cosine(target, pos)
             neg_dist = scipy.spatial.distance.cosine(target, neg)
-            train_fout.write(f'{pos_dist},{neg_dist},')
+            train_fout.write(f'{pos_dist},{neg_dist},{loss.item()}\n')
 
             loss.backward()
             speech_optimizer.step()
@@ -213,8 +213,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             batch_loss.append(loss.item())
             epoch_loss += loss.item()
-
-            train_fout.write(f'{loss.item()}\n')
 
             if not step % (len(train_data) // 32):
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
@@ -239,7 +237,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
     print('Training done!')
     train_fout.close()
-
 
 def main():
     ARGS, unused = parse_args()
