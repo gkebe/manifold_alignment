@@ -2,7 +2,7 @@ import os
 import pickle
 import random
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 import torch
@@ -69,33 +69,33 @@ def save_embeddings(embedding_path,embedding):
 #    os.path.join(train_results_dir, 'Figures/')
 #)
 
-def create_plot(pkldata, title, xlabel, ylabel, xscale, yscale, legend, figsize, location):
-    if not os.path.exists(location):
-        os.makedirs(location)
-
-    visual = pickle.load(open(pkldata, 'rb'))
-    #Note: I always save the x label in visual[0], and the results from different methods in next indices visual[1], visual[2], ...
-    if figsize is not None:
-        plt.figure(figsize=figsize)
-
-    if legend is not None:
-        for i in range(len(visual)):
-            plt.plot(visual[i], label=legend[i])
-    else:
-        for i in range(len(visual)):
-            plt.plot(visual[i])
-
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if xscale is not None:
-        plt.xscale(xscale)
-    if yscale is not None:
-        plt.yscale(yscale)
-    if legend is not None:
-        plt.legend(loc='lower right')
-    plt.savefig(f'{location}{title}.pdf')
-    plt.close('all')
+#def create_plot(pkldata, title, xlabel, ylabel, xscale, yscale, legend, figsize, location):
+#    if not os.path.exists(location):
+#        os.makedirs(location)
+#
+#    visual = pickle.load(open(pkldata, 'rb'))
+#    #Note: I always save the x label in visual[0], and the results from different methods in next indices visual[1], visual[2], ...
+#    if figsize is not None:
+#        plt.figure(figsize=figsize)
+#
+#    if legend is not None:
+#        for i in range(len(visual)):
+#            plt.plot(visual[i], label=legend[i])
+#    else:
+#        for i in range(len(visual)):
+#            plt.plot(visual[i])
+#
+#    plt.title(title)
+#    plt.xlabel(xlabel)
+#    plt.ylabel(ylabel)
+#    if xscale is not None:
+#        plt.xscale(xscale)
+#    if yscale is not None:
+#        plt.yscale(yscale)
+#    if legend is not None:
+#        plt.legend(loc='lower right')
+#    plt.savefig(f'{location}{title}.pdf')
+#    plt.close('all')
 
 def procrustes_distance(A, B):
     # Translation.
