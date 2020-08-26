@@ -56,7 +56,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         torch.stack([train_data[i[0]] for i in examples]),
         torch.stack([train_data[i[1]] for i in examples]),
         [instance_names[i[0]] for i in examples][0],
-        [instance_names[i[0]] for i in examples][0],
+        [instance_names[i[1]] for i in examples][0],
     )
 
 def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
