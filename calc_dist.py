@@ -17,6 +17,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', help='name of experiment to evaluate')
     parser.add_argument('--test_data', help='path to test data')
+    parser.add_argument('--sample_size', type=int, default=0,
+        help='number of pos/neg samples for each instance')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
@@ -65,9 +67,10 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
     speech2speech_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
     for speech_index, speech in enumerate(speech_test_data):
         positive_indices = [i for i, name in enumerate(instance_names) if speech[1] == name]
-        negative_indices = random.sample([i for i, name in enumerate(instance_names) if speech[1] != name], len(positive_indices)) 
-        positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+        negative_indices = random.sample([i for i, name in enumerate(instance_names) if speech[1] != name], len(positive_indices))
+        if sample_size:
+            positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+            negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
         speech_data = speech[0].to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
@@ -97,8 +100,9 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
     for vision_index, vision in enumerate(vision_test_data):
         positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
         negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name], len(positive_indices))
-        positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+        if sample_size:
+            positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+            negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
         
         vision_data = vision[0].to(device)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
@@ -124,8 +128,9 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
     for vision_index, vision in enumerate(vision_test_data):
         positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
         negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name], len(positive_indices))
-        positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+        if sample_size:
+            positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+            negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
         
         vision_data = vision[0].to(device)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
@@ -154,6 +159,7 @@ def main():
     evaluate(
         ARGS.experiment,
         ARGS.test_data,
+        ARGS.sample_size,
         ARGS.gpu_num,
         ARGS.embedded_dim,
     )
