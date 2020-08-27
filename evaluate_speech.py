@@ -37,6 +37,8 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
 
     speech_test_data = [(s, i) for s, _, _, i in test_data]
     vision_test_data = [(v, i) for _, v, _, i in test_data]
+    instance_names = [i for _, _, _, i in test_data]
+    object_names = [o for _, _, o, _ in test_data]
 
     print(len(speech_test_data))
     print(len(vision_test_data))
@@ -73,6 +75,7 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
     v_to_s_pn_counts = defaultdict(int)
     v_to_s_rand_counts = defaultdict(int)
     for vision_index, vision in enumerate(vision_test_data):
+        break
         pn_fout.write(f'V->S,')
         rand_fout.write(f'V->S,')
 
@@ -156,6 +159,7 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
     s_to_v_pn_counts = defaultdict(int)
     s_to_v_rand_counts = defaultdict(int)
     for speech_index, speech in enumerate(speech_test_data):
+        break
         pn_fout.write(f'S->V,')
         rand_fout.write(f'S->V,')
 
@@ -225,13 +229,61 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
         s_to_v_mrr_pn = reciprocal_sum_pn / len(vision_test_data)
         s_to_v_mrr_rand = reciprocal_sum_rand / len(vision_test_data)
 
-
     print(f'V->S counts pn: {dict(v_to_s_pn_counts)}')
     print(f'V->S counts rand: {dict(v_to_s_rand_counts)}')
     print(f'S->V counts pn: {dict(s_to_v_pn_counts)}')
     print(f'S->V counts rand: {dict(s_to_v_rand_counts)}')
     pn_fout.close()
     rand_fout.close()
+
+    speech2speech_fout = open('speech2speech.txt', 'w')
+    speech2speech_fout.write('instance_name_1,instance_name_2,embedded_distance\n')
+    for speech_index_i, speech_i in enumerate(speech_test_data):
+        for speech_index_j, speech_j in enumerate(speech_test_data):
+            speech_data_i = speech_i[0].to(device)
+            # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
+            speech_data_i = speech_data_i.permute(0, 2, 1)
+            embedded_speech_i = speech_model(speech_data_i).cpu().detach().numpy()
+            
+            speech_data_j = speech_j[0].to(device)
+            speech_data_j = speech_data_j.permute(0, 2, 1)
+            embedded_speech_j = speech_model(speech_data_j).cpu().detach().numpy()
+
+            dist = scipy.spatial.distance.cosine(embedded_speech_i, embedded_speech_j)
+            
+            speech2speech_fout.write(f'{instance_names[speech_index_i]},{instance_names[speech_index_j]},{dist}\n')
+    speech2speech_fout.close()
+
+    vision2vision_fout = open('vision2vision.txt', 'w')
+    vision2vision_fout.write('instance_name_1,instance_name_2,embedded_distance\n')
+    for vision_index_i, vision_i in enumerate(vision_test_data):
+        for vision_index_j, vision_j in enumerate(vision_test_data):
+            vision_data_i = vision_i[0].to(device) 
+            embedded_vision_i = vision_model(vision_data_i).cpu().detach().numpy()
+
+            vision_data_j = vision_j[0].to(device)
+            embedded_vision_j = vision_model(vision_data_j).cpu().detach().numpy()
+            
+            dist = scipy.spatial.distance.cosine(embedded_vision_i, embedded_vision_j)
+
+            vision2vision_fout.write(f'{instance_names[vision_index_i]},{instance_names[vision_index_j]},{dist}\n')
+    vision2vision_fout.close()
+
+    vision2speech_fout = open('vision2speech.txt', 'w')
+    vision2speech_fout.write('vision_instance,speech_instance,embedded_distance\n')
+    for vision_index, vision in enumerate(vision_test_data):
+        for speech_index, speech in enumerate(speech_test_data):
+            vision_data = vision[0].to(device)
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+
+            speech_data = speech[0].to(device)
+            speech_data = speech_data.permute(0, 2, 1)
+            embedded_speech = speech_model(speech_data).spu().detach().numpy()
+
+            dist = scipy.spatial.distance.cosine(embedded_vision, embedded_speech)
+
+            vision2speech_fout.write(f'{instance_names[vision_index]},{instance_names[speech_index]},{dist}\n')
+    vision2speech_fout.close()
 
     return v_to_s_mrr_pn, v_to_s_mrr_rand, s_to_v_mrr_pn, s_to_v_mrr_rand
 
