@@ -67,7 +67,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         positive_indices = [i for i, name in enumerate(instance_names) if speech[1] == name]
         negative_indices = random.sample([i for i, name in enumerate(instance_names) if speech[1] != name], len(positive_indices)) 
         positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices, sample_size))
+        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
         speech_data = speech[0].to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
@@ -98,7 +98,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
         negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name], len(positive_indices))
         positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices, sample_size))
+        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
         
         vision_data = vision[0].to(device)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
@@ -125,7 +125,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
         negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name], len(positive_indices))
         positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
-        negative_indices = random.sample(negative_indices, min(len(negative_indices, sample_size))
+        negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
         
         vision_data = vision[0].to(device)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
