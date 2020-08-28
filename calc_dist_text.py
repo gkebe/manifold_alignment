@@ -127,14 +127,14 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
             pos_language = language_test_data[i]
             pos_language_data = pos_language[0].to(device)
             embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
-            dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
+            dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
             vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
 
         for i in negative_indices:
             neg_language = language_test_data[i]
             neg_language_data = neg_language[0].to(device)
             embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
-            dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
+            dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
             vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
     vision2language_fout.close()
     print('Wrote vision2language: {datetime.datetime.now().time()}')
