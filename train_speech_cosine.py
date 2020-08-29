@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, SequentialSampler
 #import torchaudio
+from tqdm import tqdm
 
 from datasets import GLData
 from lstm import LSTM
@@ -120,9 +121,9 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     avg_epoch_loss = []
 
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
-        for step, batch in enumerate(train_dataloader):
+        for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             train_fout.write(f'{epoch},{step},')
             speech, vision, object_name, instance_name = batch
             train_fout.write(f'{instance_name[0]},')
