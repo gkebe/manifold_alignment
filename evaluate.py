@@ -49,8 +49,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     with open(pos_neg_examples_file, 'rb') as fin:
         pos_neg_examples = pickle.load(fin)
 
-    language_model = RowNet(language_dim, embed_dim=embedded_dim)
-    vision_model = RowNet(vision_dim, embed_dim=embedded_dim)
+    language_model = RowNet(language_dim, embedded_dim=embedded_dim)
+    vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     # language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
     # vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
     language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
