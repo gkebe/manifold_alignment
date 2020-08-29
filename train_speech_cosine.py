@@ -14,6 +14,7 @@ from datasets import GLData
 from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
+from losses import triplet_loss_cosine_abext_marker
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -162,43 +163,51 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos.to(device))
                 neg = vision_model(vision_neg.to(device))
+                marker = "vvv"
             elif case == 2:
                 train_fout.write(f'{speech_pos_instance},{speech_neg_instance},sss,')
                 target = speech_model(speech.to(device))
                 pos = speech_model(speech_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
+                marker = "lll"
             elif case == 3:
                 train_fout.write(f'{speech_pos_instance},{speech_neg_instance},vss,')
                 target = vision_model(vision.to(device))
                 pos = speech_model(speech_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
+                marker = "vll"
             elif case == 4:
                 train_fout.write(f'{vision_pos_instance},{vision_neg_instance},svv,')
                 target = speech_model(speech.to(device))
                 pos = vision_model(vision_pos.to(device))
                 neg = vision_model(vision_neg.to(device))
+                marker = "lvv"
             elif case == 5:
                 train_fout.write(f'{vision_pos_instance},{speech_neg_instance},vvs,')
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
+                marker = "vvl"
             elif case == 6:
                 train_fout.write(f'{speech_pos_instance},{vision_neg_instance},ssv,')
                 target = speech_model(speech.to(device))
                 pos = speech_model(speech_pos.to(device))
                 neg = vision_model(vision_neg.to(device))
+                marker = "llv"
             elif case == 7:
                 train_fout.write(f'{speech_pos_instance},{vision_neg_instance},vsv,')
                 target = vision_model(vision.to(device))
                 pos = speech_model(speech_pos.to(device))
                 neg = vision_model(vision_neg.to(device))
+                marker = "vlv"
             elif case == 8:
                 train_fout.write(f'{vision_pos_instance},{speech_neg_instance},svs,')
                 target = speech_model(speech.to(device))
                 pos = vision_model(vision_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
-
-            loss = triplet_loss(target, pos, neg)
+                marker = "lvl"
+            loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, speech_model, vision_model, margin=0.4)
+            # loss = triplet_loss(target, pos, neg)
             target = target.cpu().detach().numpy()
             pos = pos.cpu().detach().numpy()
             neg = neg.cpu().detach().numpy()
