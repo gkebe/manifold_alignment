@@ -23,11 +23,9 @@ def cosine_triplet_loss(margin=0.4):
     return lossf
 
 
-def triplet_loss_cosine_abext_marker(anchor, positive, negative, marker, model_A, model_B, margin=0.4):
+def triplet_loss_cosine_abext_marker(anchor, positive, negative, marker, margin=0.4):
     """Triplet cosine loss with intra-class splitting."""
     triplet_loss = cosine_triplet_loss(margin=margin)
-
-    mods = {'a': model_A, 'b': model_B}
     marker_types = ['aaa', 'aab', 'aba', 'baa', 'bba', 'bab', 'abb', 'bbb']
     marker_dict = {k: [i for i in range(len(marker)) if marker[i] == k] for k in marker_types}
 
@@ -41,9 +39,9 @@ def triplet_loss_cosine_abext_marker(anchor, positive, negative, marker, model_A
             num = num + len(marker_dict[marker_type])
 
             l = l + torch.sum(triplet_loss(
-                mods[marker_type[0]](anchor[marker_dict[marker_type]]),
-                mods[marker_type[1]](positive[marker_dict[marker_type]]),
-                mods[marker_type[2]](negative[marker_dict[marker_type]])
+                anchor[marker_dict[marker_type]],
+                positive[marker_dict[marker_type]],
+                negative[marker_dict[marker_type]]
             ))
 
     return l / num

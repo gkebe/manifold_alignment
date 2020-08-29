@@ -216,8 +216,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
                 neg = language_model(language_neg_examples.to(device))
                 marker = ["aba"]
 
-            loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, language_model, vision_model,
-                                                            margin=0.4)
+            loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
 
             target = target.cpu().detach().numpy()

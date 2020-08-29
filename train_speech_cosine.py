@@ -85,7 +85,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
-        num_layers=1,
+        num_layers=3,
         dropout=0.0,
         device=device
     )
@@ -206,7 +206,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
                 pos = vision_model(vision_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
                 marker = ["aba"]
-            loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, speech_model, vision_model, margin=0.4)
+            loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
             target = target.cpu().detach().numpy()
             pos = pos.cpu().detach().numpy()
