@@ -19,7 +19,7 @@ class LSTM(torch.nn.Module):
         c_0 = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
         output, (hidden, c_n) = self.lstm(x, (hidden, c_0))
-        hidden = hidden.view(self.num_layers, 1, self.hidden_dim)[-1]
+        hidden = hidden.view(self.num_layers, batch_size, self.hidden_dim)[-1]
 
         # This does some reshaping, might be an old idiom
         # see: https://discuss.pytorch.org/t/when-and-why-do-we-use-contiguous/47588
