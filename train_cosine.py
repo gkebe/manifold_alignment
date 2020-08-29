@@ -172,49 +172,49 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                marker = "vvv"
+                marker = "bbb"
             elif rand_int == 2:
                 train_fout.write(f'{language_pos_instance},{language_neg_instance},lll,')
                 target = language_model(language.to(device))
                 pos = language_model(language_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
-                marker = "lll"
+                marker = "aaa"
             elif rand_int == 3:
                 train_fout.write(f'{language_pos_instance},{language_neg_instance},vll')
                 target = vision_model(vision.to(device))
                 pos = language_model(language_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
-                marker = "vll"
+                marker = "baa"
             elif rand_int == 4:
                 train_fout.write(f'{vision_pos_instance},{vision_neg_instance},lvv')
                 target = language_model(language.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                marker = "lvv"
+                marker = "abb"
             elif rand_int == 5:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},vvl')
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
-                marker = "vvl"
+                marker = "bba"
             elif rand_int == 6:
                 train_fout.write(f'{language_pos_instance},{vision_neg_instance},llv')
                 target = language_model(language.to(device))
                 pos = language_model(language_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                marker = "llv"
+                marker = "aab"
             elif rand_int == 7:
                 train_fout.write(f'{language_pos_instance},{vision_neg_instance},vlv')
                 target = vision_model(vision.to(device))
                 pos = language_model(language_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                marker = "vlv"
+                marker = "bab"
             elif rand_int == 8:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
                 target = language_model(language.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
-                marker = "lvl"
+                marker = "aba"
 
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, language_model, vision_model,
                                                             margin=0.4)
