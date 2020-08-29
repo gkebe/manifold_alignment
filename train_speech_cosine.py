@@ -32,6 +32,8 @@ def parse_args():
         help='dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
         help='training batch size')
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of hidden layers')
 
     return parser.parse_known_args()
 
