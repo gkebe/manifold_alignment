@@ -49,7 +49,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
-        num_layers=1,
+        num_layers=3,
         dropout=0.0,
         device=device
     )
