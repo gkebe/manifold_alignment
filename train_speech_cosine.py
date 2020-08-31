@@ -34,6 +34,8 @@ def parse_args():
         help='training batch size')
     parser.add_argument('--num_layers', type=int, default=1,
         help='number of hidden layers')
+    parser.add_argument('--h', type=int, default=200,
+        help='Value for TBPTT')
 
     return parser.parse_known_args()
 
@@ -58,7 +60,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers = 1, margin=0.4):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, margin=0.4):
 
     results_dir = f'./output/{experiment_name}'
     os.makedirs(results_dir, exist_ok=True)
@@ -92,6 +94,10 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         dropout=0.0,
         device=device
     )
+    
+    # Sets number of time steps for truncated back propogation through time
+    speech_model.set_TBPTT(h)
+
     vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
@@ -261,7 +267,8 @@ def main():
         ARGS.embedded_dim,
         ARGS.gpu_num,
         ARGS.seed,
-        ARGS.num_layers
+        ARGS.num_layers,
+        ARGS.h,
     )
 
 if __name__ == '__main__':

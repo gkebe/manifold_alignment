@@ -8,18 +8,46 @@ class LSTM(torch.nn.Module):
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
 
+        self.k = None
+
         self.lstm = torch.nn.LSTM(input_size, hidden_dim, num_layers,
             batch_first=True, dropout=dropout)
         self.fc = torch.nn.Linear(hidden_dim, output_size)
 
-    def forward(self, x):
-        batch_size = x.size(0)
-        hidden = torch.zeros(self.num_layers, batch_size,
+    def set_TBPTT(self, h):
+        '''
+        Sets k1 = k2 = h for Truncated Back Propogation through time
+        to avoid exploding gradients and speed up training time for
+        long sequences.
+
+        Williams, RJ and Peng, J "An efficient gradient-based algorithm for on-line
+        training of recurrent network trajectories". 1990
+        '''
+        self.k = h
+        
+        return self
+
+    def forward(self, X):
+        batch_size = X.size(0)
+        h_t = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
-        c_0 = torch.zeros(self.num_layers, batch_size,
+        c_t = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
-        output, (hidden, c_n) = self.lstm(x, (hidden, c_0))
-        hidden = hidden.view(self.num_layers, batch_size, self.hidden_dim)[-1]
+
+        T = X.size(1)
+        for t, x in enumerate(X.split(1, 1)):
+            print(x)
+            print(X.size())
+            print(x.size())
+
+            out, (h_t, c_t) = self.lstm(x, (h_t, c_t))
+            # perform TBPTT if set
+            if self.k is not None and T - t == self.k:
+                out.detach()
+
+        #out, (hidden, c_t) = self.lstm(x, (hidden, c_0))
+
+        hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
 
         # This does some reshaping, might be an old idiom
         # see: https://discuss.pytorch.org/t/when-and-why-do-we-use-contiguous/47588
