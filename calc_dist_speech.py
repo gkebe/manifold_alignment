@@ -75,6 +75,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         speech_data = speech[0].to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
         speech_data = speech_data.permute(0, 2, 1)
+        print(speech_data.size())
         embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
         for i in positive_indices:
@@ -82,14 +83,22 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
             pos_speech_data = pos_speech[0].to(device)
             pos_speech_data = pos_speech_data.permute(0, 2, 1)
             embedded_pos_speech = speech_model(pos_speech_data).cpu().detach().numpy()
+
+            print(embedded_speech)        
+            print(embedded_speech.size())
+            print(embedded_pos_speech.size())
+
             dist = scipy.spatial.distance.cosine(embedded_speech, embedded_pos_speech)
             speech2speech_fout.write(f'{speech[1]},{pos_speech[1]},p,{dist}\n')
 
-        for i in negative_indices: 
+        for i in negative_indices:
             neg_speech = speech_test_data[i]
             neg_speech_data = neg_speech[0].to(device)
             neg_speech_data = neg_speech_data.permute(0, 2, 1)
             embedded_neg_speech = speech_model(neg_speech_data).cpu().detach().numpy()
+
+            print(embedded_neg_speech.size())
+
             dist = scipy.spatial.distance.cosine(embedded_speech, embedded_neg_speech)
             speech2speech_fout.write(f'{speech[1]},{neg_speech[1]},n,{dist}\n')        
     speech2speech_fout.close()
@@ -151,7 +160,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
             dist = scipy.spatial.distance.cosine(embedded_speech, embedded_neg_speech)
             vision2speech_fout.write(f'{vision[1]},{neg_speech[1]},n,{dist}\n')
     vision2speech_fout.close()
-    print('Wrote vision2speech: {datetime.datetime.now().time()}')
+    print(f'Wrote vision2speech: {datetime.datetime.now().time()}')
 
 def main():
     ARGS, unused = parse_args()
