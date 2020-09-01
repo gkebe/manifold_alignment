@@ -46,7 +46,7 @@ class LSTM(torch.nn.Module):
                 if T - t == self.k:
                     out.detach()
         else:
-            out, (h_t, c_t) = self.lstm(X, (hidden, c_0))
+            out, (h_t, c_t) = self.lstm(X, (h_t, c_t))
 
         hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
 
