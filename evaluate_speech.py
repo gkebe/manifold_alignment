@@ -19,13 +19,14 @@ def parse_args():
     parser.add_argument('--test_data_path', help='path to test data')
     parser.add_argument('--pos_neg_examples_file',
         help='path to examples pkl')
+    parser.add_argument('--num_layers', help='number of lstm layers')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
 
     return parser.parse_known_args()
 
-def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
+def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim):
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
 
@@ -56,7 +57,7 @@ def evaluate(experiment, test_path, pos_neg_examples, gpu_num, embedded_dim):
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
-        num_layers=1,
+        num_layers=num_layers,
         dropout=0.0,
         device=device
     )
@@ -243,6 +244,7 @@ def main():
         ARGS.experiment,
         ARGS.test_data_path,
         ARGS.pos_neg_examples_file,
+        ARGS.num_layers,
         ARGS.gpu_num,
         ARGS.embedded_dim,
     )

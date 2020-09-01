@@ -36,9 +36,9 @@ class LSTM(torch.nn.Module):
 
         T = X.size(1)
         for t, x in enumerate(X.split(1, 1)):
-            print(x)
-            print(X.size())
-            print(x.size())
+            #print(x)
+            #print(X.size())
+            #print(x.size())
 
             out, (h_t, c_t) = self.lstm(x, (h_t, c_t))
             # perform TBPTT if set

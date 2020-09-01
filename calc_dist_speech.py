@@ -17,6 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', help='name of experiment to evaluate')
     parser.add_argument('--test_data', help='path to test data')
+    parser.add_argument('--num_layers', help='num lstm layers')
     parser.add_argument('--sample_size', type=int, default=0,
         help='number of pos/neg samples for each instance')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
@@ -25,7 +26,7 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
+def evaluate(experiment, test_path, num_layers, sample_size, gpu_num, embedded_dim):
     with open(test_path, 'rb') as fin:
         test_data = pickle.load(fin)
 
@@ -49,7 +50,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
-        num_layers=3,
+        num_layers=num_layers,
         dropout=0.0,
         device=device
     )
@@ -168,6 +169,7 @@ def main():
     evaluate(
         ARGS.experiment,
         ARGS.test_data,
+        ARGS.num_layers,
         ARGS.sample_size,
         ARGS.gpu_num,
         ARGS.embedded_dim,
