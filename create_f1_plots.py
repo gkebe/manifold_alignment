@@ -47,9 +47,9 @@ def create_plot(n, file_path, fout, title):
         recall.append(r)
         f1.append(f)
 
-    p_line = plt.plot(thresholds, precision, label='Precision')
-    r_line = plt.plot(thresholds, recall, label='Recall')
-    f_line = plt.plot(thresholds, f1, label='F1-Score')
+    p_line = plt.plot(thresholds, precision, 'b', label='Precision')
+    r_line = plt.plot(thresholds, recall, 'r', label='Recall')
+    f_line = plt.plot(thresholds, f1, 'm', label='F1-Score')
     plt.title(title)
     plt.xlabel('Threshold')
     plt.ylabel('Precision/Recall/F1')

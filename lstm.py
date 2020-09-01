@@ -34,18 +34,19 @@ class LSTM(torch.nn.Module):
         c_t = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
 
-        T = X.size(1)
-        for t, x in enumerate(X.split(1, 1)):
-            #print(x)
-            #print(X.size())
-            #print(x.size())
+        if self.k:
+            T = X.size(1)
+            for t, x in enumerate(X.split(1, 1)):
+                #print(x)
+                #print(X.size())
+                #print(x.size())
 
-            out, (h_t, c_t) = self.lstm(x, (h_t, c_t))
-            # perform TBPTT if set
-            if self.k is not None and T - t == self.k:
-                out.detach()
-
-        #out, (hidden, c_t) = self.lstm(x, (hidden, c_0))
+                out, (h_t, c_t) = self.lstm(x, (h_t, c_t))
+                # perform TBPTT if set
+                if T - t == self.k:
+                    out.detach()
+        else:
+            out, (h_t, c_t) = self.lstm(X, (hidden, c_0))
 
         hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
 
