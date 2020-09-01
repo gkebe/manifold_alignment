@@ -17,7 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', help='name of experiment to evaluate')
     parser.add_argument('--test_data', help='path to test data')
-    parser.add_argument('--num_layers', help='num lstm layers')
+    parser.add_argument('--num_layers', type=int, help='num lstm layers')
     parser.add_argument('--sample_size', type=int, default=0,
         help='number of pos/neg samples for each instance')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')

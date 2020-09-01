@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('--test_data_path', help='path to test data')
     parser.add_argument('--pos_neg_examples_file',
         help='path to examples pkl')
-    parser.add_argument('--num_layers', help='number of lstm layers')
+    parser.add_argument('--num_layers', type=int, help='number of lstm layers')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
