@@ -76,7 +76,7 @@ def evaluate(experiment, test_path, num_layers, sample_size, gpu_num, embedded_d
         speech_data = speech[0].to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
         speech_data = speech_data.permute(0, 2, 1)
-        print(speech_data.size())
+        #print(speech_data.size())
         embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
         for i in positive_indices:
@@ -85,9 +85,9 @@ def evaluate(experiment, test_path, num_layers, sample_size, gpu_num, embedded_d
             pos_speech_data = pos_speech_data.permute(0, 2, 1)
             embedded_pos_speech = speech_model(pos_speech_data).cpu().detach().numpy()
 
-            print(embedded_speech)        
-            print(embedded_speech.size())
-            print(embedded_pos_speech.size())
+            #print(embedded_speech)        
+            #print(embedded_speech.size())
+            #print(embedded_pos_speech.size())
 
             dist = scipy.spatial.distance.cosine(embedded_speech, embedded_pos_speech)
             speech2speech_fout.write(f'{speech[1]},{pos_speech[1]},p,{dist}\n')
@@ -98,7 +98,7 @@ def evaluate(experiment, test_path, num_layers, sample_size, gpu_num, embedded_d
             neg_speech_data = neg_speech_data.permute(0, 2, 1)
             embedded_neg_speech = speech_model(neg_speech_data).cpu().detach().numpy()
 
-            print(embedded_neg_speech.size())
+            #print(embedded_neg_speech.size())
 
             dist = scipy.spatial.distance.cosine(embedded_speech, embedded_neg_speech)
             speech2speech_fout.write(f'{speech[1]},{neg_speech[1]},n,{dist}\n')        

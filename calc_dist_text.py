@@ -137,7 +137,7 @@ def evaluate(experiment, test_path, sample_size, gpu_num, embedded_dim):
             dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
             vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
     vision2language_fout.close()
-    print('Wrote vision2language: {datetime.datetime.now().time()}')
+    print(f'Wrote vision2language: {datetime.datetime.now().time()}')
 
 def main():
     ARGS, unused = parse_args()
