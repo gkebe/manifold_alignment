@@ -34,7 +34,7 @@ class LSTM(torch.nn.Module):
         c_t = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
 
-        if self.k:
+        if self.k is not None:
             T = X.size(1)
             for t, x in enumerate(X.split(1, 1)):
                 #print(x)

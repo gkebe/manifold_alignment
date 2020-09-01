@@ -34,7 +34,7 @@ def parse_args():
         help='training batch size')
     parser.add_argument('--num_layers', type=int, default=1,
         help='number of hidden layers')
-    parser.add_argument('--h', type=int, default=200,
+    parser.add_argument('--h', type=int, default=None,
         help='Value for TBPTT')
 
     return parser.parse_known_args()
