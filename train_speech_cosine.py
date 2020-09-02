@@ -39,16 +39,16 @@ def parse_args():
 
     return parser.parse_known_args()
 
-#def lr_lambda(e):
-#    if e < 20:
-#        return 0.001
-#    elif e < 40:
-#        return 0.0001
-#    else:
-#        return 0.00001
+def lr_lambda(e):
+    if e < 20:
+        return 0.001
+    elif e < 40:
+        return 0.0001
+    else:
+        return 0.00001
 
-def lr_lambda(epoch):
-    return .95 ** epoch
+#def lr_lambda(epoch):
+#    return .95 ** epoch
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
