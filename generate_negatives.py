@@ -63,11 +63,12 @@ def main():
 
     with open(ARGS.data_file, 'rb') as fin:
         data = pickle.load(fin)
-        language_data, object_names = [l for l, _, _, _ in data], [o for _, _, o, _ in data]
-        for i, language in enumerate(language_data):
-            if i % 100 == 0:
-                print(f'Calculating {i}/{len(language_data)}')
-            negatives.append(get_pos_neg_examples(language, language_data, object_names))
+    
+    language_data, object_names = [l for l, _, _, _ in data], [o for _, _, o, _ in data]
+    for i, language in enumerate(language_data):
+        if i % 100 == 0:
+            print(f'Calculating {i}/{len(language_data)}')
+        negatives.append(get_pos_neg_examples(language, language_data, object_names))
 
     with open(ARGS.out_file, 'wb') as fout:
         pickle.dump(negatives, fout)
