@@ -89,7 +89,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
 
     language_test_data = [(l, i) for l, _, _, i in test_data]
     vision_test_data = [(v, i) for _, v, _, i in test_data]
-    instance_names_test = [i for _, _, _, i in train_data]
+    instance_names_test = [i for _, _, _, i in test_data]
     sample_size = 0
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
