@@ -89,6 +89,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
 
     language_test_data = [(l, i) for l, _, _, i in test_data]
     vision_test_data = [(v, i) for _, v, _, i in test_data]
+    instance_names_test = [i for _, _, _, i in train_data]
     sample_size = 0
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
@@ -280,8 +281,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
         language2language_fout = open(os.path.join(results_dir, 'language2language_epoch'+str(epoch)+'.txt'), 'w')
         language2language_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
         for language_index, language in enumerate(language_test_data):
-            positive_indices = [i for i, name in enumerate(instance_names) if language[1] == name]
-            negative_indices = random.sample([i for i, name in enumerate(instance_names) if language[1] != name],
+            positive_indices = [i for i, name in enumerate(instance_names_test) if language[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_test) if language[1] != name],
                                              len(positive_indices))
             if sample_size:
                 positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
@@ -309,8 +310,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
         vision2vision_fout = open(os.path.join(results_dir, 'vision2vision_epoch'+str(epoch)+'.txt'), 'w')
         vision2vision_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
         for vision_index, vision in enumerate(vision_test_data):
-            positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
-            negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name],
+            positive_indices = [i for i, name in enumerate(instance_names_test) if vision[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_test) if vision[1] != name],
                                              len(positive_indices))
             if sample_size:
                 positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
@@ -338,8 +339,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
         vision2language_fout = open(os.path.join(results_dir, 'vision2language_epoch'+str(epoch)+'.txt'), 'w')
         vision2language_fout.write('vision_instance,language_instance,p/n,embedded_distance\n')
         for vision_index, vision in enumerate(vision_test_data):
-            positive_indices = [i for i, name in enumerate(instance_names) if vision[1] == name]
-            negative_indices = random.sample([i for i, name in enumerate(instance_names) if vision[1] != name],
+            positive_indices = [i for i, name in enumerate(instance_names_test) if vision[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_test) if vision[1] != name],
                                              len(positive_indices))
             if sample_size:
                 positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
