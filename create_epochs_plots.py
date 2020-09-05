@@ -20,7 +20,7 @@ def create_plot(threshold, file_path, fout, title):
     os.chdir(file_path)
     files = []
     for file in glob.glob("vision2language*.txt"):
-        files.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),file_path, file))
+        files.append(os.path.join(file_path, file))
     distances = []
     precision = []
     recall = []
