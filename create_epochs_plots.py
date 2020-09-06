@@ -19,16 +19,16 @@ def parse_args():
 def create_plot(threshold, file_path, fout, title):    
     os.chdir(file_path)
     files = []
-    for file in glob.glob(os.path.join(file_path, "/vision2language*.txt")):
-        files.append(os.path.join(file_path, file))
+    for epoch_file in glob.glob(os.path.join(file_path, "/vision2language*.txt")):
+        files.append(os.path.join(file_path, epoch_file))
     distances = []
     precision = []
     recall = []
     f1 = []
-    for file in files:
+    for epoch_file in files:
         distances = []
         y_true = []
-        with open(file, 'r') as fin:
+        with open(epoch_file, 'r') as fin:
             headers = fin.readline() 
             for line in fin:
                 instance_1, instance_2, pn, dist = line.strip().split(',')
