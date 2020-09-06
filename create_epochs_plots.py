@@ -16,8 +16,7 @@ def parse_args():
     parser.add_argument('--threshold', type=float, default=0.45,
         help='threshold between 0 and 1')
     return parser.parse_known_args()
-def create_plot(threshold, file_path, fout, title):    
-    os.chdir(file_path)
+def create_plot(threshold, file_path, fout, title):
     files = []
     for epoch_file in glob.glob(os.path.join(file_path, "/vision2language*.txt")):
         files.append(os.path.join(file_path, epoch_file))
@@ -52,7 +51,7 @@ def create_plot(threshold, file_path, fout, title):
         recall.append(r)
         f1.append(f)
     
-    epochs = [i+1 for i in  range(len(files))]
+    epochs = [i+1 for i in range(len(files))]
     
     p_line = plt.plot(epochs, precision, 'b', label='Precision')
     r_line = plt.plot(epochs, recall, 'r', label='Recall')
