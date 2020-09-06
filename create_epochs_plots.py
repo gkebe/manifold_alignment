@@ -19,7 +19,7 @@ def parse_args():
 def create_plot(threshold, file_path, fout, title):    
     os.chdir(file_path)
     files = []
-    for file in glob.glob(file_path + "/vision2language*.txt"):
+    for file in glob.glob(os.path.join(file_path, "/vision2language*.txt")):
         files.append(os.path.join(file_path, file))
     distances = []
     precision = []
