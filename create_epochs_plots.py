@@ -13,7 +13,7 @@ from sklearn.metrics import precision_recall_fscore_support
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', help='experiment name')
-    parser.add_argument('--threshold', type=int, default=0.45,
+    parser.add_argument('--threshold', type=float, default=0.45,
         help='threshold between 0 and 1')
     return parser.parse_known_args()
 def create_plot(threshold, file_path, fout, title):    
