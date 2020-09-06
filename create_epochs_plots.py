@@ -19,23 +19,24 @@ def parse_args():
 def create_plot(threshold, file_path, fout, title):
     files = []
     for epoch_ in range(len(glob.glob(file_path + "/vision2language*.txt"))):
-        epoch_file = file_path + f"/vision2language_epoch{epoch_+1}.txt"
+        epoch_file = file_path + f"/vision2language_epoch{epoch_}.txt"
         files.append(os.path.join(epoch_file))
     distances = []
     precision = []
     recall = []
     f1 = []
     for epoch_file in files:
+        print(epoch_file)
         distances = []
         y_true = []
         with open(epoch_file, 'r') as fin:
-            headers = fin.readline() 
+            headers = fin.readline()
             for line in fin:
                 instance_1, instance_2, pn, dist = line.strip().split(',')
-        
+
                 y_true.append(True if pn == 'p' else False)
                 distances.append(float(dist))
-    
+
         normalized_distances = [d / max(distances) for d in distances]
         print(f'min n_dist = {min(normalized_distances)}; max n_dist = {max(normalized_distances)}')
         print(f'Calculating for threshold = {threshold}')
@@ -45,23 +46,23 @@ def create_plot(threshold, file_path, fout, title):
                 y_pred.append(True)
             else:
                 y_pred.append(False)
-        
+
         p, r, f, s = precision_recall_fscore_support(y_true, y_pred, average='binary')
         print(f'p: {p}, r: {r}, f: {f}')
         precision.append(p)
         recall.append(r)
         f1.append(f)
-    
+
     epochs = [i+1 for i in range(len(files))]
-    
+
     p_line = plt.plot(epochs, precision, 'b', label='Precision')
     r_line = plt.plot(epochs, recall, 'r', label='Recall')
     f_line = plt.plot(epochs, f1, 'm', label='F1-Score')
     plt.title(title)
     plt.xlabel('Threshold')
     plt.ylabel('Precision/Recall/F1')
-    plt.legend()    
-    
+    plt.legend()
+
     plt.savefig(fout)
     
 def main():
