@@ -18,7 +18,7 @@ def parse_args():
     return parser.parse_known_args()
 def create_plot(threshold, file_path, fout, title):
     files = []
-    for epoch_file in glob.glob(os.path.join(file_path, "/vision2language*.txt")):
+    for epoch_file in glob.glob(os.path.join(file_path, "vision2language*.txt")):
         files.append(os.path.join(file_path, epoch_file))
     distances = []
     precision = []
