@@ -15,10 +15,8 @@ def parse_args():
     parser.add_argument('--experiment', help='experiment name')
     parser.add_argument('--threshold', type=float, default=0.45,
         help='threshold between 0 and 1')
-    parser.add_argument('--train_instances', type=int, default=0,
-        help='number of training instances')
     return parser.parse_known_args()
-def create_plot(threshold, file_path, fout, title, train_instances=0):
+def create_plot(threshold, file_path, fout, title):
     files = []
     for epoch_ in range(len(glob.glob(file_path + "/vision2language*.txt"))):
         epoch_file = file_path + f"/vision2language_epoch{epoch_}.txt"
@@ -67,19 +65,10 @@ def create_plot(threshold, file_path, fout, title, train_instances=0):
 
     plt.savefig(fout+"_epochs.png")
     plt.close()
-    if train_instances:
-        instances = [(i+1)*train_instances for i in range(len(files))]
-
-        p_line = plt.plot(instances, precision, 'b', label='Precision')
-        r_line = plt.plot(instances, recall, 'r', label='Recall')
-        f_line = plt.plot(instances, f1, 'm', label='F1-Score')
-        plt.title(title)
-        plt.xlabel('Epochs')
-        plt.ylabel('Precision/Recall/F1')
-        plt.legend()
-
-        plt.savefig(fout+"_instances.png")
-    
+    print(epochs)
+    print(precision)
+    print(recall)
+    print(f1)
 def main():
     ARGS, unused = parse_args()
 
@@ -93,7 +82,7 @@ def main():
 
     #create_plot(l2l, l2l_out, 'Language to Language Embedded Cosine Distance')
     #create_plot(v2v, v2v_out, 'Vision to Vision Embedded Cosine Distance')
-    create_plot(ARGS.threshold, results_dir, v2l_out, 'Vision to Language Precision/Recall/F1 by Epoch', ARGS.train_instances)
+    create_plot(ARGS.threshold, results_dir, v2l_out, 'Vision to Language Precision/Recall/F1 by Epoch')
 
 if __name__ == '__main__':
     main()
