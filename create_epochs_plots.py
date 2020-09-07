@@ -54,7 +54,10 @@ def create_plot(threshold, file_path, fout, title):
         f1.append(f)
 
     epochs = [i+1 for i in range(len(files))]
-
+    print(epochs)
+    print(precision)
+    print(recall)
+    print(f1)
     p_line = plt.plot(epochs, precision, 'b', label='Precision')
     r_line = plt.plot(epochs, recall, 'r', label='Recall')
     f_line = plt.plot(epochs, f1, 'm', label='F1-Score')
@@ -64,11 +67,6 @@ def create_plot(threshold, file_path, fout, title):
     plt.legend()
 
     plt.savefig(fout+"_epochs.png")
-    plt.close()
-    print(epochs)
-    print(precision)
-    print(recall)
-    print(f1)
 def main():
     ARGS, unused = parse_args()
 
