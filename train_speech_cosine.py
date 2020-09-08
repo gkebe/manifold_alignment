@@ -40,6 +40,9 @@ def parse_args():
         help='number of hidden units to keep')
     parser.add_argument('--h', type=int, default=None,
         help='Value for TBPTT')
+    parser.add_argument("--more_fc",
+                        action='store_true',
+                        help="Whether to use 3 fully connected layers.")
 
     return parser.parse_known_args()
 
@@ -56,7 +59,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4, lr=0.001):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4, lr=0.001, more_fc=False):
     def lr_lambda(e):
         if e < 20:
             return lr
@@ -95,7 +98,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         awe=32,
         num_layers=num_layers,
         dropout=0.0,
-        device=device
+        device=device,
+        more_fc=more_fc
     )
     
     # Sets number of time steps for truncated back propogation through time
@@ -273,7 +277,8 @@ def main():
         ARGS.num_layers,
         ARGS.h,
         ARGS.awe,
-        ARGS.lr
+        ARGS.lr,
+        ARGS.more_fc
     )
 
 if __name__ == '__main__':
