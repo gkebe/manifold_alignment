@@ -48,6 +48,7 @@ class LSTM(torch.nn.Module):
                     out.detach()
         else:
             out, (h_t, c_t) = self.lstm(X, (h_t, c_t))
+            print(out.size())
             seq_len = out.size(1)
             #print(f'init size: {out.size()}')
             out = out.narrow(
@@ -55,7 +56,7 @@ class LSTM(torch.nn.Module):
                 max(0, seq_len - self.awe),
                 min(self.awe, seq_len)
             ).flatten(1)
-            print(len(out))
+            print(out.size())
             #print(f'out  size: {out.size()}')
 
         #hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
