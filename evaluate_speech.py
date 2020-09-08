@@ -23,10 +23,12 @@ def parse_args():
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
+    parser.add_argument('--awe', type=int, default=32,
+        help='awe')
 
     return parser.parse_known_args()
 
-def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim):
+def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim, awe):
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
 
@@ -59,7 +61,8 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         hidden_dim=64,
         num_layers=num_layers,
         dropout=0.0,
-        device=device
+        device=device,
+        awe=awe
     )
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
@@ -247,6 +250,7 @@ def main():
         ARGS.num_layers,
         ARGS.gpu_num,
         ARGS.embedded_dim,
+        ARGS.awe
     )
 
     print(f'V->S p/n: {v_to_s_mrr_pn}')
