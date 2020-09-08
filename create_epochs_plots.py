@@ -54,17 +54,19 @@ def create_plot(threshold, file_path, fout, title):
         f1.append(f)
 
     epochs = [i+1 for i in range(len(files))]
-
+    print(epochs)
+    print(precision)
+    print(recall)
+    print(f1)
     p_line = plt.plot(epochs, precision, 'b', label='Precision')
     r_line = plt.plot(epochs, recall, 'r', label='Recall')
     f_line = plt.plot(epochs, f1, 'm', label='F1-Score')
     plt.title(title)
-    plt.xlabel('Threshold')
+    plt.xlabel('Epochs')
     plt.ylabel('Precision/Recall/F1')
     plt.legend()
 
-    plt.savefig(fout)
-    
+    plt.savefig(fout+"_epochs.png")
 def main():
     ARGS, unused = parse_args()
 
@@ -74,7 +76,7 @@ def main():
     #l2l_out = os.path.join(results_dir, 'l2l.png')
     #v2v = os.path.join(results_dir, 'vision2vision.txt')
     #v2v_out = os.path.join(results_dir, 'v2v.png')
-    v2l_out = os.path.join(results_dir, 'v2l_p_r_f1_epochs.png')
+    v2l_out = os.path.join(results_dir, 'v2l_p_r_f1')
 
     #create_plot(l2l, l2l_out, 'Language to Language Embedded Cosine Distance')
     #create_plot(v2v, v2v_out, 'Vision to Vision Embedded Cosine Distance')
