@@ -13,7 +13,9 @@ class LSTM(torch.nn.Module):
 
         self.lstm = torch.nn.LSTM(input_size, hidden_dim, num_layers,
             batch_first=True, dropout=dropout)
-        self.fc = torch.nn.Linear(hidden_dim * awe, output_size)
+        self.fc1 = torch.nn.Linear(hidden_dim * awe, hidden_dim * awe)
+        self.fc2 = torch.nn.Linear(hidden_dim * awe, hidden_dim * awe)
+        self.fc3 = torch.nn.Linear(hidden_dim * awe, output_size)
 
     def set_TBPTT(self, h):
         '''
@@ -66,6 +68,8 @@ class LSTM(torch.nn.Module):
         #hidden = self.contiguous().view(-1, self.hidden_dim)
         #hidden = self.fc(hidden)
 
-        out = self.fc(out)
+        out = F.leaky_relu(self.fc1(out), negative_slope=.2)
+        out = F.leaky_relu(self.fc2(out), negative_slope=.2)
+        out = self.fc3(out)
 
         return out
