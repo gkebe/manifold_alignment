@@ -34,6 +34,8 @@ def parse_args():
         help='training batch size')
     parser.add_argument('--num_layers', type=int, default=1,
         help='number of hidden layers')
+    parser.add_argument('--awe', type=int, default=32,
+        help='number of hidden units to keep')
     parser.add_argument('--h', type=int, default=None,
         help='Value for TBPTT')
 
@@ -60,7 +62,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, margin=0.4):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4):
 
     results_dir = f'./output/{experiment_name}'
     os.makedirs(results_dir, exist_ok=True)
@@ -90,6 +92,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         input_size=40,
         output_size=embedded_dim,
         hidden_dim=64,
+        awe=32,
         num_layers=num_layers,
         dropout=0.0,
         device=device
@@ -269,6 +272,7 @@ def main():
         ARGS.seed,
         ARGS.num_layers,
         ARGS.h,
+        ARGS.awe,
     )
 
 if __name__ == '__main__':

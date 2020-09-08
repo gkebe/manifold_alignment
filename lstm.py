@@ -2,17 +2,18 @@ import torch
 import torch.nn.functional as F
 
 class LSTM(torch.nn.Module):
-    def __init__(self, input_size, output_size, hidden_dim, num_layers, dropout, device):
+    def __init__(self, input_size, output_size, hidden_dim, awe, num_layers, dropout, device):
         super(LSTM, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
+        self.awe = awe
         self.num_layers = num_layers
 
         self.k = None
 
         self.lstm = torch.nn.LSTM(input_size, hidden_dim, num_layers,
             batch_first=True, dropout=dropout)
-        self.fc = torch.nn.Linear(hidden_dim, output_size)
+        self.fc = torch.nn.Linear(hidden_dim * awe, output_size)
 
     def set_TBPTT(self, h):
         '''
@@ -47,12 +48,22 @@ class LSTM(torch.nn.Module):
                     out.detach()
         else:
             out, (h_t, c_t) = self.lstm(X, (h_t, c_t))
+            seq_len = out.size(1)
+            #print(f'init size: {out.size()}')
+            out = out.narrow(
+                1,
+                max(0, seq_len - self.awe),
+                min(self.awe, seq_len)
+            ).flatten(1)
+            #print(f'out  size: {out.size()}')
 
-        hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
-
+        #hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
+        #print(f'hidden size: {hidden.size()}')
         # This does some reshaping, might be an old idiom
         # see: https://discuss.pytorch.org/t/when-and-why-do-we-use-contiguous/47588
         #hidden = self.contiguous().view(-1, self.hidden_dim)
-        hidden = self.fc(hidden)
+        #hidden = self.fc(hidden)
 
-        return hidden
+        out = self.fc(out)
+
+        return out
