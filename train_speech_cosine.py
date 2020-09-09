@@ -36,18 +36,15 @@ def parse_args():
         help='number of hidden layers')
     parser.add_argument('--awe', type=int, default=32,
         help='number of hidden units to keep')
+    parser.add_argument('--lr', type=float, default=0.001,
+        help='number of hidden units to keep')
     parser.add_argument('--h', type=int, default=None,
         help='Value for TBPTT')
+    parser.add_argument("--more_fc",
+                        action='store_true',
+                        help="Whether to use 3 fully connected layers.")
 
     return parser.parse_known_args()
-
-def lr_lambda(e):
-    if e < 20:
-        return 0.001
-    elif e < 40:
-        return 0.0001
-    else:
-        return 0.00001
 
 #def lr_lambda(epoch):
 #    return .95 ** epoch
@@ -62,8 +59,14 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4):
-
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4, lr=0.001, more_fc=False):
+    def lr_lambda(e):
+        if e < 20:
+            return lr
+        elif e < 40:
+            return lr * 0.1
+        else:
+            return lr * 0.01
     results_dir = f'./output/{experiment_name}'
     os.makedirs(results_dir, exist_ok=True)
 
@@ -95,7 +98,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         awe=32,
         num_layers=num_layers,
         dropout=0.0,
-        device=device
+        device=device,
+        more_fc=more_fc
     )
     
     # Sets number of time steps for truncated back propogation through time
@@ -119,8 +123,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     vision_model.to(device)
 
     # TODO: does this need to change for the RNN?
-    speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=0.001)
-    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
+    speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=lr)
+    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=lr)
 
     speech_scheduler = torch.optim.lr_scheduler.LambdaLR(speech_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
@@ -273,6 +277,8 @@ def main():
         ARGS.num_layers,
         ARGS.h,
         ARGS.awe,
+        ARGS.lr,
+        ARGS.more_fc
     )
 
 if __name__ == '__main__':
