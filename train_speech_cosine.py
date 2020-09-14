@@ -151,9 +151,9 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             
             # TODO: JANKY STUFF FOR TENSOR SIZING AND ORDER ERRORS
             # this has to do with the batch_first param of the RNN
-            speech = speech.permute(0, 2, 1)
-            speech_pos = speech_pos.permute(0, 2, 1)
-            speech_neg = speech_neg.permute(0, 2, 1)
+            speech = speech
+            speech_pos = speech_pos
+            speech_neg = speech_neg
 
             # TODO: If batching, need to pad step dim with 0s to
             #   match the max step size
