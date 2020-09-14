@@ -92,9 +92,9 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: set some of these from ARGS
     speech_dim = 40
     speech_model = LSTM(
-        input_size=40,
+        input_size=512,
         output_size=embedded_dim,
-        hidden_dim=64,
+        hidden_dim=512,
         num_layers=num_layers,
         dropout=0.0,
         device=device,
