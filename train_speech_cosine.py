@@ -36,12 +36,9 @@ def parse_args():
         help='number of hidden layers')
     parser.add_argument('--lr', type=float, default=0.001,
         help='number of hidden units to keep')
-    parser.add_argument("--more_fc",
+    parser.add_argument("--mean_pooling",
                         action='store_true',
-                        help="Whether to use 3 fully connected layers.")
-    parser.add_argument("--bilstm",
-                        action='store_true',
-                        help="Whether to use a BiLSTM.")
+                        help="Whether to use mean pooling.")
 
     return parser.parse_known_args()
 
@@ -58,7 +55,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, margin=0.4, lr=0.001, more_fc=False, bilstm=False):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, margin=0.4, lr=0.001, mean_pooling=False):
     def lr_lambda(e):
         if e < 20:
             return lr
@@ -95,10 +92,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         output_size=embedded_dim,
         hidden_dim=512,
         num_layers=num_layers,
-        dropout=0.0,
+        mean_pooling=mean_pooling,
         device=device,
-        more_fc=more_fc,
-        bilstm=bilstm
     )
 
     vision_dim = list(vision_train_data[0].size())[0]
@@ -272,8 +267,7 @@ def main():
         ARGS.seed,
         ARGS.num_layers,
         ARGS.lr,
-        ARGS.more_fc,
-        ARGS.bilstm
+        ARGS.mean_pooling
     )
 
 if __name__ == '__main__':
