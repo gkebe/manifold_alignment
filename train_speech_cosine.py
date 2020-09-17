@@ -87,6 +87,13 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: grab speech dimension from speech data tensor
     # TODO: set some of these from ARGS
     speech_dim = 40
+    print({
+        "input_size":list(speech_train_data[0].size())[1],
+        "output_size":embedded_dim,
+        "hidden_dim":list(speech_train_data[0].size())[1],
+        "num_layers":num_layers,
+        "mean_pooling":mean_pooling,
+        "device":device})
     speech_model = LSTM(
         input_size=list(speech_train_data[0].size())[1],
         output_size=embedded_dim,
