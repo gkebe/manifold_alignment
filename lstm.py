@@ -25,8 +25,10 @@ class LSTM(torch.nn.Module):
         lstm_out = lstm_out.view(steps, self.hidden_dim)
 
         if self.mean_pooling:
+            print("Mean pooling over the output...")
             out = torch.mean(lstm_out)
         else:
+            print("Using the last time step...")
             out = lstm_out[-1]
 
         out = F.leaky_relu(self.fc1(out), negative_slope=.2)
