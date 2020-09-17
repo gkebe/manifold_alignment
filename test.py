@@ -179,7 +179,7 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         language_train,
         vision_train,
         lamb_std=1,
-        cosine=False
+        cosine=True
     )
 
     precisions = []
@@ -205,9 +205,9 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     print(experiment_name+'_'+str(embedded_dim))
     print('MRR,    KNN,    Corr,   Mean F1 (Micro),    Mean F1 (Macro)')
     print('%.3g & %.3g & %.3g & %.3g & %.3g' % (
-        mean_reciprocal_rank(language_embeddings, vision_embeddings, encoded_labels, cosine=False),
-        knn(language_embeddings, vision_embeddings, encoded_labels, k=3, cosine=False),
-        corr_between(language_embeddings, vision_embeddings, cosine=False), np.mean(f1s), np.mean(f1s_macro))
+        mean_reciprocal_rank(language_embeddings, vision_embeddings, encoded_labels, cosine=True),
+        knn(language_embeddings, vision_embeddings, encoded_labels, k=3, cosine=True),
+        corr_between(language_embeddings, vision_embeddings, cosine=True), np.mean(f1s), np.mean(f1s_macro))
     )
 
     # language_accuracy = language_tests.count(True) / len(language_tests)
