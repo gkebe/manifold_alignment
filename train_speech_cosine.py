@@ -87,7 +87,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: grab speech dimension from speech data tensor
     # TODO: set some of these from ARGS
     speech_dim = 40
-
+    print(mean_pooling)
     speech_model = LSTM(
         input_size=list(speech_train_data[0].size())[1],
         output_size=embedded_dim,
@@ -134,6 +134,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             train_fout.write(f'{epoch},{step},')
             speech, vision, object_name, instance_name = batch
             train_fout.write(f'{instance_name[0]},')
+
 
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
             speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = get_examples_batch(pos_neg_examples, indices, speech_train_data, instance_names)
@@ -257,7 +258,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
 def main():
     ARGS, unused = parse_args()
-
+    print(ARGS.mean_pooling)
     train(
         ARGS.experiment,
         ARGS.epochs,

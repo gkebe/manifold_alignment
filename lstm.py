@@ -3,6 +3,7 @@ import torch.nn.functional as F
 
 class LSTM(torch.nn.Module):
     def __init__(self, input_size, output_size, hidden_dim, num_layers, mean_pooling, device):
+        print(mean_pooling)
         super(LSTM, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
@@ -23,7 +24,7 @@ class LSTM(torch.nn.Module):
         batch_size = X.size()[0]
         lstm_out, self.hidden = self.lstm(X, self.hidden)
         lstm_out = lstm_out.view(batch_size, steps, self.hidden_dim)
-
+        print(self.mean_pooling)
         if self.mean_pooling:
             print("Mean pooling over the output...")
             out = torch.mean(lstm_out, 1)
