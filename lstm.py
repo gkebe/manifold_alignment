@@ -7,7 +7,7 @@ class LSTM(torch.nn.Module):
         self.device = device
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
-        self.lstm = torch.nn.LSTM(input(input_size), int(hidden_dim/2), num_layers=num_layers, batch_first=True, bidirectional=True)
+        self.lstm = torch.nn.LSTM(int(input_size), int(hidden_dim/2), num_layers=num_layers, batch_first=True, bidirectional=True)
         self.fc1 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.fc2 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = torch.nn.Linear(hidden_dim, output_size)
