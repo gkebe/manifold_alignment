@@ -33,5 +33,5 @@ class LSTM(torch.nn.Module):
         out = F.leaky_relu(self.fc1(out), negative_slope=.2)
         out = F.leaky_relu(self.fc2(out), negative_slope=.2)
         out = self.fc3(out)
-
+        print(out.shape)
         return out
