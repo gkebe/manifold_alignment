@@ -260,17 +260,17 @@ def main():
     ARGS, unused = parse_args()
     print(ARGS.mean_pooling)
     train(
-        ARGS.experiment,
-        ARGS.epochs,
-        ARGS.train_data,
-        ARGS.pos_neg_examples_file,
-        ARGS.batch_size,
-        ARGS.embedded_dim,
-        ARGS.gpu_num,
-        ARGS.seed,
-        ARGS.num_layers,
-        ARGS.lr,
-        ARGS.mean_pooling
+        experiment_name=ARGS.experiment,
+        epochs=ARGS.epochs,
+        train_data_path=ARGS.train_data,
+        pos_neg_examples_file=ARGS.pos_neg_examples_file,
+        batch_size=ARGS.batch_size,
+        embedded_dim=ARGS.embedded_dim,
+        gpu_num=ARGS.gpu_num,
+        seed=ARGS.seed,
+        num_layers=ARGS.num_layers,
+        lr=ARGS.lr,
+        mean_pooling=ARGS.mean_pooling
     )
 
 if __name__ == '__main__':
