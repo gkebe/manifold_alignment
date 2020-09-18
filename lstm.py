@@ -19,7 +19,7 @@ class LSTM(torch.nn.Module):
 
     def forward(self, X):
         self.hidden = self.init_hidden()
-        steps = X.size()[0]
+        steps = X.size()[1]
         lstm_out, self.hidden = self.lstm(X, self.hidden)
         lstm_out = lstm_out.view(steps, self.hidden_dim)
 
