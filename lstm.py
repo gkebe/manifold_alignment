@@ -20,18 +20,18 @@ class LSTM(torch.nn.Module):
     def forward(self, X):
         self.hidden = self.init_hidden()
         steps = X.size()[1]
+        batch_size = X.size()[0]
         lstm_out, self.hidden = self.lstm(X, self.hidden)
-        lstm_out = lstm_out.view(steps, self.hidden_dim)
+        lstm_out = lstm_out.view(batch_size, steps, self.hidden_dim)
 
         if self.mean_pooling:
             print("Mean pooling over the output...")
-            out = torch.mean(lstm_out)
+            out = torch.mean(lstm_out, 1)
         else:
             print("Using the last time step...")
-            out = lstm_out[-1]
+            out = lstm_out[:,-1]
 
         out = F.leaky_relu(self.fc1(out), negative_slope=.2)
         out = F.leaky_relu(self.fc2(out), negative_slope=.2)
         out = self.fc3(out)
-        print(out.shape)
         return out

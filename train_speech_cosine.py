@@ -214,9 +214,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
                 pos = vision_model(vision_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
                 marker = ["aba"]
-            print(target.shape)
-            print(pos.shape)
-            print(neg.shape)
             print(marker)
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
