@@ -215,7 +215,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
                 pos = vision_model(vision_pos.to(device))
                 neg = speech_model(speech_neg.to(device))
                 marker = ["aba"]
-            print(marker)
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
             target = target.cpu().detach().numpy()
@@ -258,7 +257,6 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
 def main():
     ARGS, unused = parse_args()
-    print(ARGS.mean_pooling)
     train(
         experiment_name=ARGS.experiment,
         epochs=ARGS.epochs,

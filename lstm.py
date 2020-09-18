@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 class LSTM(torch.nn.Module):
     def __init__(self, input_size, output_size, hidden_dim, num_layers, mean_pooling, device):
-        print(mean_pooling)
+
         super(LSTM, self).__init__()
         self.device = device
         self.hidden_dim = hidden_dim
