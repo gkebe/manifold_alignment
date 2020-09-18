@@ -14,6 +14,10 @@ class LSTM(torch.nn.Module):
         self.fc3 = torch.nn.Linear(hidden_dim, output_size)
         self.hidden = self.init_hidden()
         self.mean_pooling = mean_pooling
+        if self.mean_pooling:
+            print("Mean pooling over the output...")
+        else:
+            print("Using last time step...")
     def init_hidden(self):
         return (torch.randn(2, 1, self.hidden_dim // 2, device=self.device),
                 torch.randn(2, 1, self.hidden_dim // 2, device=self.device))
