@@ -12,6 +12,7 @@ from datasets import GLData
 from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
+from attention import Combiner
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,19 +20,21 @@ def parse_args():
     parser.add_argument('--test_data_path', help='path to test data')
     parser.add_argument('--pos_neg_examples_file',
         help='path to examples pkl')
-    parser.add_argument('--num_layers', type=int, help='number of lstm layers')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
-    parser.add_argument('--awe', type=int, default=32,
-        help='awe')
-    parser.add_argument("--more_fc",
+    parser.add_argument("--lstm",
                         action='store_true',
-                        help="Whether to use 3 fully connected layers.")
+                        help="Whether to use a lstm.")
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of lstm hidden layers')
+    parser.add_argument("--mean_pooling",
+                        action='store_true',
+                        help="Whether to use mean pooling on the lstm's output.")
 
     return parser.parse_known_args()
 
-def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim, awe, more_fc=False):
+def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim, lstm=False, mean_pooling=False):
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
 
@@ -57,17 +60,18 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
     print(f'is_available(): {torch.cuda.is_available()}')
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
+    if lstm:
+        speech_model = LSTM(
+            input_size=list(speech_test_data[0].size())[1],
+            output_size=embedded_dim,
+            hidden_dim=list(speech_test_data[0].size())[1],
+            num_layers=num_layers,
+            mean_pooling=mean_pooling,
+            device=device,
 
-    speech_model = LSTM(
-        input_size=40,
-        output_size=embedded_dim,
-        hidden_dim=64,
-        num_layers=num_layers,
-        dropout=0.0,
-        device=device,
-        awe=awe,
-        more_fc=more_fc
-    )
+        )
+    else:
+        speech_model = Combiner(list(speech_test_data[0].size())[1], embedded_dim)
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
@@ -248,14 +252,14 @@ def main():
     ARGS, unused = parse_args()
     
     v_to_s_mrr_pn, v_to_s_mrr_rand, s_to_v_mrr_pn, s_to_v_mrr_rand = evaluate(
-        ARGS.experiment,
-        ARGS.test_data_path,
-        ARGS.pos_neg_examples_file,
-        ARGS.num_layers,
-        ARGS.gpu_num,
-        ARGS.embedded_dim,
-        ARGS.awe,
-        ARGS.more_fc
+        experiment=ARGS.experiment,
+        test_path=ARGS.test_data_path,
+        pos_neg_examples=ARGS.pos_neg_examples_file,
+        num_layers=ARGS.num_layers,
+        gpu_num=ARGS.gpu_num,
+        embedded_dim=ARGS.embedded_dim,
+        lstm=ARGS.lstm,
+        mean_pooling=ARGS.mean_pooling
     )
 
     print(f'V->S p/n: {v_to_s_mrr_pn}')
