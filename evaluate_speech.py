@@ -93,6 +93,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         rand_fout.write(f'V->S,')
 
         vision_data = vision[0].to(device)
+        print(vision_data.shape)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
 
         #
