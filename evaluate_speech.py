@@ -108,9 +108,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         speech_neg = speech_test_data[neg_index][0].to(device)
 
         # TODO: THIS SHOULD BE HANDLED WHEN CREATING THE FEATURES
-        speech_target = speech_target.permute(0, 2, 1)
-        speech_pos = speech_pos.permute(0, 2, 1)
-        speech_neg = speech_neg.permute(0, 2, 1)
+        # speech_target = speech_target.permute(0, 2, 1)
+        # speech_pos = speech_pos.permute(0, 2, 1)
+        # speech_neg = speech_neg.permute(0, 2, 1)
 
         embedded_speech_target = speech_model(speech_target).cpu().detach().numpy()
         embedded_speech_pos = speech_model(speech_pos).cpu().detach().numpy()
