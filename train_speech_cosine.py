@@ -16,6 +16,7 @@ from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
 from losses import triplet_loss_cosine_abext_marker
+from attention import Combiner
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -32,13 +33,16 @@ def parse_args():
         help='dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
         help='training batch size')
-    parser.add_argument('--num_layers', type=int, default=1,
-        help='number of hidden layers')
     parser.add_argument('--lr', type=float, default=0.001,
         help='number of hidden units to keep')
+    parser.add_argument("--lstm",
+                        action='store_true',
+                        help="Whether to use a lstm.")
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of lstm hidden layers')
     parser.add_argument("--mean_pooling",
                         action='store_true',
-                        help="Whether to use mean pooling.")
+                        help="Whether to use mean pooling on the lstm's output.")
 
     return parser.parse_known_args()
 
@@ -55,7 +59,7 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, margin=0.4, lr=0.001, mean_pooling=False):
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, margin=0.4, lr=0.001, lstm=False, num_layers=1, mean_pooling=False):
     def lr_lambda(e):
         if e < 20:
             return lr
@@ -87,15 +91,17 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: grab speech dimension from speech data tensor
     # TODO: set some of these from ARGS
     speech_dim = 40
-    print(mean_pooling)
-    speech_model = LSTM(
-        input_size=list(speech_train_data[0].size())[1],
-        output_size=embedded_dim,
-        hidden_dim=list(speech_train_data[0].size())[1],
-        num_layers=num_layers,
-        mean_pooling=mean_pooling,
-        device=device,
-    )
+    if lstm:
+        speech_model = LSTM(
+            input_size=list(speech_train_data[0].size())[1],
+            output_size=embedded_dim,
+            hidden_dim=list(speech_train_data[0].size())[1],
+            num_layers=num_layers,
+            mean_pooling=mean_pooling,
+            device=device,
+        )
+    else:
+        speech_model = Combiner(list(speech_train_data[0].size())[1], 1024)
 
     vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
@@ -266,9 +272,10 @@ def main():
         embedded_dim=ARGS.embedded_dim,
         gpu_num=ARGS.gpu_num,
         seed=ARGS.seed,
-        num_layers=ARGS.num_layers,
         lr=ARGS.lr,
-        mean_pooling=ARGS.mean_pooling
+        lstm=ARGS.lstm,
+        num_layers=ARGS.num_layers,
+        mean_pooling=ARGS.mean_pooling,
     )
 
 if __name__ == '__main__':
