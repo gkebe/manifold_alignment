@@ -47,6 +47,7 @@ class Combiner(nn.Module):
         input: a tensor of shape (B, T, D)
         return: a new tensor of shape (B, D')
         """
+        print(input.shape)
         features = self.featureExtraction(input)  # (B, T, D)
         # weights = self.weightSelection(input) #(B, T) or (B, T, 1)
         weights = self.weightSelection(features)  # (B, T) or (B, T, 1)
