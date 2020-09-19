@@ -62,9 +62,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
     device = torch.device(device_name)
     if lstm:
         speech_model = LSTM(
-            input_size=list(speech_test_data[0].size())[1],
+            input_size=list(speech_test_data[0][0].size())[1],
             output_size=embedded_dim,
-            hidden_dim=list(speech_test_data[0].size())[1],
+            hidden_dim=list(speech_test_data[0][0].size())[1],
             num_layers=num_layers,
             mean_pooling=mean_pooling,
             device=device,
