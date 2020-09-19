@@ -76,8 +76,6 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
     vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt'), map_location=device))
-    speech_model=torch.nn.DataParallel(speech_model)
-    vision_model=torch.nn.DataParallel(vision_model)
     speech_model.to(device)
     vision_model.to(device)
     speech_model.eval()
@@ -93,7 +91,6 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         rand_fout.write(f'V->S,')
 
         vision_data = vision[0].to(device)
-        print(vision_data.shape)
         embedded_vision = vision_model(vision_data).cpu().detach().numpy()
 
         #
