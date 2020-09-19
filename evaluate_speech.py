@@ -112,6 +112,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         # speech_pos = speech_pos.permute(0, 2, 1)
         # speech_neg = speech_neg.permute(0, 2, 1)
 
+        print(speech_target.shape)
         embedded_speech_target = speech_model(speech_target).cpu().detach().numpy()
         embedded_speech_pos = speech_model(speech_pos).cpu().detach().numpy()
         embedded_speech_neg = speech_model(speech_neg).cpu().detach().numpy()
