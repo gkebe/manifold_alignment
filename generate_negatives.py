@@ -18,7 +18,7 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def get_negative_language(l, data, n=10):
+def get_negative_language(l, data, n=1):
     cosines = []
     for i, v in enumerate(data):
         cosines.append((i, scipy.spatial.distance.cosine(l, v)))
@@ -44,9 +44,9 @@ def get_pos_neg_examples(language, language_data, object_names):
         if torch.equal(language, vector):
             positive_index = i
     index = positive_index
-    while (positive_index == index):
-        positive_index = np.random.choice(
-            [i for i, x in enumerate(object_names) if x == object_names[index]])
+#     while (positive_index == index):
+#         positive_index = np.random.choice(
+#             [i for i, x in enumerate(object_names) if x == object_names[index]])
     negative_label = np.random.choice(list(set(object_names) - set([object_names[index]])))
     negative_index = np.random.choice([i for i, x in enumerate(object_names) if x == negative_label])
     # choose randomly for top n negative examples

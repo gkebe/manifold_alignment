@@ -153,7 +153,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
-        for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
+        for step, batch in enumerate(train_dataloader):
             train_fout.write(f'{epoch},{step},')
         #for i, (language, vision, object_name, instance_name) in enumerate(train_data):
             language, vision, object_name, instance_name = batch
@@ -250,8 +250,8 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
             epoch_loss += loss.item()
 
             #reporting progress
-            if not step % (len(train_data) // 32):
-                print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
+#             if not step % (len(train_data) // 32):
+#                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
 
         # Save network state at each epoch.
         torch.save(language_model.state_dict(), os.path.join(train_results_dir, 'model_A_state.pt'))

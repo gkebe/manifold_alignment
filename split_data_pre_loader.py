@@ -11,13 +11,22 @@ def parse_args():
     parser.add_argument('--test', default='test_data.pkl', help='test data out path')
     parser.add_argument('--train_percentage', type=float, default=0.8, help='percentage of data dedicated to train')
     parser.add_argument('--seed', type=int, default=75, help='Random seed for split reproducability')
-
+    parser.add_argument('--user', default=None, help='which user to use to train')
+    
     return parser.parse_known_args()
 
-def gl_dataset(data_location, train_percentage=0.8, seed=None):
+def gl_dataset(data_location, train_percentage=0.8, seed=None, user_id=None):
     with open(data_location, 'rb') as fin:
         data = pickle.load(fin)
-
+    
+    # make per user splits
+    if user_id is not None:
+        data_indicies = [i for i in range(len(data["user_ids"])) if data["user_ids"][i] == user_id]
+        data['language_data'] = [data['language_data'][i] for i in data_indicies]
+        data['vision_data'] = [data['vision_data'][i] for i in data_indicies]
+        data['object_names'] = [data['object_names'][i] for i in data_indicies]
+        data['instance_names'] = [data['instance_names'][i] for i in data_indicies]
+    
     train, test = gl_train_test_split(data, train_percentage=train_percentage, seed=seed)
 
     train_data = GLData(train)
@@ -57,7 +66,7 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None):
             int(train_percentage * data['object_names'].count(object_name))
         )
     test_indices = [i for i in range(len(data['object_names'])) if i not in train_indices]
-
+    
     train['language_data'] = [data['language_data'][i] for i in train_indices]
     train['vision_data'] = [data['vision_data'][i] for i in train_indices]
     train['object_names'] = [data['object_names'][i] for i in train_indices]
@@ -83,6 +92,7 @@ class GLData(Dataset):
             self.data['vision_data'][i],
             self.data['object_names'][i],
             self.data['instance_names'][i],
+            self.data['user_ids'][i]
         )
 
         return item
@@ -92,8 +102,14 @@ def main():
 
     with open(ARGS.data, 'rb') as fin:
         data = pickle.load(fin)
-
-    train_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed)
+    
+    
+    if ARGS.user is None:
+        user = None
+    else:
+        user = ARGS.user 
+    
+    train_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed, user_id=user)
 
     with open(ARGS.train, 'wb') as fout:
         pickle.dump(train_data, fout)
