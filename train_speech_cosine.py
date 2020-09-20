@@ -16,7 +16,7 @@ from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
 from losses import triplet_loss_cosine_abext_marker
-from attention import Combiner
+from attention import Combiner, SmarterAttentionNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -101,8 +101,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             device=device,
         )
     else:
-        speech_model = Combiner(list(speech_train_data[0].size())[1], embedded_dim)
-
+#        speech_model = Combiner(list(speech_train_data[0].size())[1], embedded_dim)
+        speech_model = SmarterAttentionNet(list(speech_train_data[0].size())[1], embedded_dim, embedded_dim)
     vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 

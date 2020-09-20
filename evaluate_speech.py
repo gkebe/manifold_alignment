@@ -12,7 +12,7 @@ from datasets import GLData
 from lstm import LSTM
 from rnn import RNN
 from rownet import RowNet
-from attention import Combiner
+from attention import Combiner, SmarterAttentionNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -71,7 +71,8 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
 
         )
     else:
-        speech_model = Combiner(list(speech_test_data[0][0].size())[1], embedded_dim)
+#        speech_model = Combiner(list(speech_test_data[0][0].size())[1], embedded_dim)
+        speech_model = SmarterAttentionNet(list(speech_test_data[0][0].size())[1], embedded_dim, embedded_dim)
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
