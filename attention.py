@@ -158,10 +158,8 @@ class SmarterAttentionNet(nn.Module):
         self.apply_attn = ApplyAttention()
 
         self.prediction_net = nn.Sequential(
-            nn.BatchNorm1d(hidden_size),
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(),
-            nn.BatchNorm1d(hidden_size),
             nn.Linear(hidden_size, hidden_size)
         )
 
