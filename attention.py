@@ -78,6 +78,8 @@ class AdditiveAttentionScore(nn.Module):
         context = torch.stack([context for _ in range(T)], dim=1)  # (B, D) -> (B, T, D)
         state_context_combined = torch.cat((states, context), dim=2)  # (B, T, D) + (B, T, D)  -> (B, T, 2*D)
         scores = self.v(torch.tanh(self.w(state_context_combined)))
+
+        return scores
 class ApplyAttention(nn.Module):
     """
     This helper module is used to apply the results of an attention mechanism to
