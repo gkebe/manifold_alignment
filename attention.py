@@ -157,11 +157,11 @@ class SmarterAttentionNet(nn.Module):
         self.score_net = AdditiveAttentionScore(hidden_size)
         self.apply_attn = ApplyAttention()
 
-        self.prediction_net = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size)
-        )
+        # self.prediction_net = nn.Sequential(
+        #     nn.Linear(hidden_size, hidden_size),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(hidden_size, hidden_size)
+        # )
 
     def forward(self, input):
         mask = getMaskByFill(input)
@@ -174,4 +174,4 @@ class SmarterAttentionNet(nn.Module):
 
         final_context, _ = self.apply_attn(h, scores, mask=mask)
 
-        return self.prediction_net(final_context)
+        return final_context
