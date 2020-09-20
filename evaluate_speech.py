@@ -143,7 +143,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         cosine_distances_rand.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_target), vision[1]))
 
         for i in random_indexes:
-            speech_data = speech_test_data[i][0].to(device)
+            speech_data = torch.unsqueeze(speech_test_data[i][0], 0).to(device)
             # TODOtorch. unsqueeze (input, dim): SHOULD BE HANDLED WHEN CREATING FEATURES
             # speech_data = speech_data.permute(0, 2, 1)
             embedded_speech = speech_model(speech_data).cpu().detach().numpy()
