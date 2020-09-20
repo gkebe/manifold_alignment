@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torch import functional as F
+import torch.nn.functional as F
 class Flatten2(nn.Module):
     """
     Takes a vector of shape (A, B, C, D, E, ...)
