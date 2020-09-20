@@ -102,7 +102,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         pos_index = pos_neg_examples[vision_index][0]
         neg_index = pos_neg_examples[vision_index][1]
 
-        speech_target = torch. unsqueeze (speech_test_data[vision_index][0], 0).to(device)
+        speech_target = torch.unsqueeze(speech_test_data[vision_index][0], 0).to(device)
         #print(speech_target.size())
         speech_pos = torch.unsqueeze(speech_test_data[pos_index][0], 0).to(device)
         speech_neg = torch.unsqueeze(speech_test_data[neg_index][0], 0).to(device)
@@ -144,8 +144,8 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
 
         for i in random_indexes:
             speech_data = speech_test_data[i][0].to(device)
-            # TODO: SHOULD BE HANDLED WHEN CREATING FEATURES
-            speech_data = speech_data.permute(0, 2, 1)
+            # TODOtorch. unsqueeze (input, dim): SHOULD BE HANDLED WHEN CREATING FEATURES
+            # speech_data = speech_data.permute(0, 2, 1)
             embedded_speech = speech_model(speech_data).cpu().detach().numpy()
             cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_vision, embedded_speech), speech_test_data[i][1]))
 
@@ -174,9 +174,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         pn_fout.write(f'S->V,')
         rand_fout.write(f'S->V,')
 
-        speech_data = speech[0].to(device)
+        speech_data = torch.unsqueeze(speech[0], 0).to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
-        speech_data = speech_data.permute(0, 2, 1)
+        # speech_data = speech_data.permute(0, 2, 1)
         embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
         #
