@@ -141,7 +141,7 @@ def getMaskByFill(x, time_dimension=1, fill=0):
 
 class SmarterAttentionNet(nn.Module):
 
-    def __init__(self, input_size, hidden_size, out_size):
+    def __init__(self, input_size, hidden_size):
         super(SmarterAttentionNet, self).__init__()
         self.backbone = nn.Sequential(
             Flatten2(),  # Shape is now (B, T, D)
@@ -162,7 +162,7 @@ class SmarterAttentionNet(nn.Module):
             nn.Linear(hidden_size, hidden_size),
             nn.LeakyReLU(),
             nn.BatchNorm1d(hidden_size),
-            nn.Linear(hidden_size, out_size)
+            nn.Linear(hidden_size, hidden_size)
         )
 
     def forward(self, input):
@@ -176,4 +176,4 @@ class SmarterAttentionNet(nn.Module):
 
         final_context, _ = self.apply_attn(h, scores, mask=mask)
 
-        return final_context
+        return self.prediction_net(final_context)
