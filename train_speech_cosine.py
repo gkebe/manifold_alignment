@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from datasets import GLData
 from lstm import LSTM
+from gru import GRU
 from rnn import RNN
 from rownet import RowNet
 from losses import triplet_loss_cosine_abext_marker
@@ -92,13 +93,17 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: set some of these from ARGS
     speech_dim = 40
     if lstm:
-        speech_model = LSTM(
+        # speech_model = LSTM(
+        #     input_size=list(speech_train_data[0].size())[1],
+        #     output_size=embedded_dim,
+        #     hidden_dim=list(speech_train_data[0].size())[1],
+        #     num_layers=num_layers,
+        #     mean_pooling=mean_pooling,
+        #     device=device,
+        # )
+        speech_model = GRU(
             input_size=list(speech_train_data[0].size())[1],
-            output_size=embedded_dim,
-            hidden_dim=list(speech_train_data[0].size())[1],
-            num_layers=num_layers,
-            mean_pooling=mean_pooling,
-            device=device,
+            embedded_dim=embedded_dim
         )
     else:
 #        speech_model = Combiner(list(speech_train_data[0].size())[1], embedded_dim)
