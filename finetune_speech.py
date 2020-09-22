@@ -191,7 +191,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
     
         # Save networks after each epoch
-        torch.save(speech_model.state_dict(), os.path.join(train_results_dir, 'speech_model.pt'))
+        torch.save(speech_model.state_dict(), os.path.join(train_results_dir, 'model_A_state.pt'))
 
         # Save loss data
         with open(os.path.join(train_results_dir, 'batch_loss.pkl'), 'wb') as fout:

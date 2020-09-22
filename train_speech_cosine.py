@@ -117,8 +117,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     if os.path.exists(os.path.join(train_results_dir, 'speech_model.pt')) and os.path.exists(os.path.join(train_results_dir, 'vision_model.pt')):
         print('Starting from pretrained networks.')
         print(f'Loaded speech_model.pt and vision_model.pt from {train_results_dir}')
-        speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'speech_model.pt')))
-        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'vision_model.pt')))
+        speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
+        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
     else:
         print('Couldn\'t find models. Training from scratch...')
 
