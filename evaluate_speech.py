@@ -10,6 +10,7 @@ import torch
 
 from datasets import GLData
 from lstm import LSTM
+from gru import GRU
 from rnn import RNN
 from rownet import RowNet
 from attention import Combiner, SmarterAttentionNet
@@ -61,14 +62,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
     if lstm:
-        speech_model = LSTM(
+        speech_model = GRU(
             input_size=list(speech_test_data[0][0].size())[1],
-            output_size=embedded_dim,
-            hidden_dim=list(speech_test_data[0][0].size())[1],
-            num_layers=num_layers,
-            mean_pooling=mean_pooling,
-            device=device,
-
+            embedded_dim=embedded_dim
         )
     else:
 #        speech_model = Combiner(list(speech_test_data[0][0].size())[1], embedded_dim)
