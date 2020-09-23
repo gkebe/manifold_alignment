@@ -48,9 +48,9 @@ def lr_lambda(e):
     if e < 20:
         return 0.001
     elif e < 40:
-        return 0.0001
+        return 0.001
     else:
-        return 0.00001
+        return 0.001
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
