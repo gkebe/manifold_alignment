@@ -295,19 +295,19 @@ def train(experiment_name, epochs, train_data_path, test_data_path, pos_neg_exam
                 positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
-            vision_data = torch.unsqueeze(vision[0], 0).to(device)
+            vision_data = vision[0].to(device)
             embedded_vision = vision_model(vision_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_vision = vision_test_data[i]
-                pos_vision_data = torch.unsqueeze(pos_vision[0], 0).to(device)
+                pos_vision_data = pos_vision[0].to(device)
                 embedded_pos_vision = vision_model(pos_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_vision)
                 vision2vision_fout.write(f'{vision[1]},{pos_vision[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_vision = vision_test_data[i]
-                neg_vision_data = torch.unsqueeze(neg_vision[0], 0).to(device)
+                neg_vision_data = neg_vision[0].to(device)
                 embedded_neg_vision = vision_model(neg_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_vision)
                 vision2vision_fout.write(f'{vision[1]},{neg_vision[1]},n,{dist}\n')

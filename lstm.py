@@ -29,6 +29,8 @@ class LSTM(torch.nn.Module):
         return self
 
     def forward(self, X):
+        if len(X.shape==2):
+            X = torch.unsqueeze(X, 0)
         batch_size = X.size(0)
         h_t = torch.zeros(self.num_layers, batch_size,
             self.hidden_dim).to(self.device)
