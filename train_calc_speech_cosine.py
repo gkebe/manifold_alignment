@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--epochs', default=1, type=int,
         help='number of epochs to train')
     parser.add_argument('--train_data', help='path to train data')
+    parser.add_argument('--test_data', default='/home/iral/data_processing/gld_data_complete.pkl',
+        help='Path to testing data pkl file')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--pos_neg_examples_file',
         help='path to pos/neg examples pkl')
@@ -356,6 +358,7 @@ def main():
         experiment_name=ARGS.experiment,
         epochs=ARGS.epochs,
         train_data_path=ARGS.train_data,
+        test_data_path=ARGS.test_data,
         pos_neg_examples_file=ARGS.pos_neg_examples_file,
         batch_size=ARGS.batch_size,
         embedded_dim=ARGS.embedded_dim,
