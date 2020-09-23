@@ -13,9 +13,11 @@ from tqdm import tqdm
 
 from datasets import GLData
 from lstm import LSTM
+from gru import GRU
 from rnn import RNN
 from rownet import RowNet
 from losses import triplet_loss_cosine_abext_marker
+from attention import Combiner, SmarterAttentionNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -32,29 +34,25 @@ def parse_args():
         help='dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
         help='training batch size')
-    parser.add_argument('--num_layers', type=int, default=1,
-        help='number of hidden layers')
-    parser.add_argument('--awe', type=int, default=32,
+    parser.add_argument('--lr', type=float, default=0.001,
         help='number of hidden units to keep')
-    parser.add_argument('--h', type=int, default=None,
-        help='Value for TBPTT')
+    parser.add_argument("--lstm",
+                        action='store_true',
+                        help="Whether to use a lstm.")
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of lstm hidden layers')
+    parser.add_argument("--mean_pooling",
+                        action='store_true',
+                        help="Whether to use mean pooling on the lstm's output.")
 
     return parser.parse_known_args()
-
-def lr_lambda(e):
-    if e < 20:
-        return 0.001
-    elif e < 40:
-        return 0.0001
-    else:
-        return 0.00001
 
 #def lr_lambda(epoch):
 #    return .95 ** epoch
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
-
+    
     return (
         torch.stack([train_data[i[0]] for i in examples]),
         torch.stack([train_data[i[1]] for i in examples]),
@@ -62,8 +60,14 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4):
-
+def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, margin=0.4, lr=0.001, lstm=False, num_layers=1, mean_pooling=False):
+    def lr_lambda(e):
+        if e < 20:
+            return lr
+        elif e < 40:
+            return lr * 0.1
+        else:
+            return lr * 0.01
     results_dir = f'./output/{experiment_name}'
     os.makedirs(results_dir, exist_ok=True)
 
@@ -88,19 +92,22 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     # TODO: grab speech dimension from speech data tensor
     # TODO: set some of these from ARGS
     speech_dim = 40
-    speech_model = LSTM(
-        input_size=40,
-        output_size=embedded_dim,
-        hidden_dim=64,
-        awe=32,
-        num_layers=num_layers,
-        dropout=0.0,
-        device=device
-    )
-
-    # Sets number of time steps for truncated back propogation through time
-    speech_model.set_TBPTT(h)
-
+    if lstm:
+        # speech_model = LSTM(
+        #     input_size=list(speech_train_data[0].size())[1],
+        #     output_size=embedded_dim,
+        #     hidden_dim=list(speech_train_data[0].size())[1],
+        #     num_layers=num_layers,
+        #     mean_pooling=mean_pooling,
+        #     device=device,
+        # )
+        speech_model = GRU(
+            input_size=list(speech_train_data[0].size())[1],
+            embedded_dim=embedded_dim
+        )
+    else:
+#        speech_model = Combiner(list(speech_train_data[0].size())[1], embedded_dim)
+        speech_model = SmarterAttentionNet(list(speech_train_data[0].size())[1], embedded_dim)
     vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
@@ -110,8 +117,8 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     if os.path.exists(os.path.join(train_results_dir, 'speech_model.pt')) and os.path.exists(os.path.join(train_results_dir, 'vision_model.pt')):
         print('Starting from pretrained networks.')
         print(f'Loaded speech_model.pt and vision_model.pt from {train_results_dir}')
-        speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'speech_model.pt')))
-        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'vision_model.pt')))
+        speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
+        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
     else:
         print('Couldn\'t find models. Training from scratch...')
 
@@ -119,15 +126,15 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
     vision_model.to(device)
 
     # TODO: does this need to change for the RNN?
-    speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=0.001)
-    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
+    speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=lr)
+    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=lr)
 
     speech_scheduler = torch.optim.lr_scheduler.LambdaLR(speech_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
 
     speech_model.train()
     vision_model.train()
-
+    
     batch_loss = []
     avg_epoch_loss = []
 
@@ -139,6 +146,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
             speech, vision, object_name, instance_name = batch
             train_fout.write(f'{instance_name[0]},')
 
+
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
             speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = get_examples_batch(pos_neg_examples, indices, speech_train_data, instance_names)
             vision_pos, vision_neg, vision_pos_instance, vision_neg_instance = get_examples_batch(pos_neg_examples, indices, vision_train_data, instance_names)
@@ -148,12 +156,12 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             # TODO: still using triplet loss?
             triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
-
+            
             # TODO: JANKY STUFF FOR TENSOR SIZING AND ORDER ERRORS
             # this has to do with the batch_first param of the RNN
-            speech = speech[0].permute(0, 2, 1)
-            speech_pos = speech_pos[0].permute(0, 2, 1)
-            speech_neg = speech_neg[0].permute(0, 2, 1)
+            speech = speech
+            speech_pos = speech_pos
+            speech_neg = speech_neg
 
             # TODO: If batching, need to pad step dim with 0s to
             #   match the max step size
@@ -236,7 +244,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
             if not step % (len(train_data) // 32):
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
-
+    
         # Save networks after each epoch
         torch.save(speech_model.state_dict(), os.path.join(train_results_dir, 'speech_model.pt'))
         torch.save(vision_model.state_dict(), os.path.join(train_results_dir, 'vision_model.pt'))
@@ -248,7 +256,7 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
         avg_epoch_loss.append(epoch_loss / len(train_data))
         with open(os.path.join(train_results_dir, 'avg_epoch_loss.pkl'), 'wb') as fout:
             pickle.dump(avg_epoch_loss, fout)
-
+        
         print('***** epoch is finished *****')
         print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
 
@@ -260,19 +268,19 @@ def train(experiment_name, epochs, train_data_path, pos_neg_examples_file, batch
 
 def main():
     ARGS, unused = parse_args()
-
     train(
-        ARGS.experiment,
-        ARGS.epochs,
-        ARGS.train_data,
-        ARGS.pos_neg_examples_file,
-        ARGS.batch_size,
-        ARGS.embedded_dim,
-        ARGS.gpu_num,
-        ARGS.seed,
-        ARGS.num_layers,
-        ARGS.h,
-        ARGS.awe,
+        experiment_name=ARGS.experiment,
+        epochs=ARGS.epochs,
+        train_data_path=ARGS.train_data,
+        pos_neg_examples_file=ARGS.pos_neg_examples_file,
+        batch_size=ARGS.batch_size,
+        embedded_dim=ARGS.embedded_dim,
+        gpu_num=ARGS.gpu_num,
+        seed=ARGS.seed,
+        lr=ARGS.lr,
+        lstm=ARGS.lstm,
+        num_layers=ARGS.num_layers,
+        mean_pooling=ARGS.mean_pooling,
     )
 
 if __name__ == '__main__':
