@@ -58,15 +58,15 @@ def create_plot(threshold, file_path, fout, title):
     print(precision)
     print(recall)
     print(f1)
-    p_line = plt.plot(epochs, precision, 'b', label='Precision')
-    r_line = plt.plot(epochs, recall, 'r', label='Recall')
-    f_line = plt.plot(epochs, f1, 'm', label='F1-Score')
-    plt.title(title)
-    plt.xlabel('Epochs')
-    plt.ylabel('Precision/Recall/F1')
-    plt.legend()
-
-    plt.savefig(fout+"_epochs.png")
+    # p_line = plt.plot(epochs, precision, 'b', label='Precision')
+    # r_line = plt.plot(epochs, recall, 'r', label='Recall')
+    # f_line = plt.plot(epochs, f1, 'm', label='F1-Score')
+    # plt.title(title)
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Precision/Recall/F1')
+    # plt.legend()
+    #
+    # plt.savefig(fout+"_epochs.png")
 def main():
     ARGS, unused = parse_args()
 
