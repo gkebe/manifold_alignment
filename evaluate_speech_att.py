@@ -10,8 +10,10 @@ import torch
 
 from datasets import GLData
 from lstm import LSTM
+from gru import GRU
 from rnn import RNN
 from rownet import RowNet
+from attention import Combiner, SmarterAttentionNet
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,16 +21,21 @@ def parse_args():
     parser.add_argument('--test_data_path', help='path to test data')
     parser.add_argument('--pos_neg_examples_file',
         help='path to examples pkl')
-    parser.add_argument('--num_layers', type=int, help='number of lstm layers')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
     parser.add_argument('--embedded_dim', type=int, default=1024,
         help='embedded_dim')
-    parser.add_argument('--awe', type=int, default=32,
-        help='awe')
+    parser.add_argument("--lstm",
+                        action='store_true',
+                        help="Whether to use a lstm.")
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of lstm hidden layers')
+    parser.add_argument("--mean_pooling",
+                        action='store_true',
+                        help="Whether to use mean pooling on the lstm's output.")
 
     return parser.parse_known_args()
 
-def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim, awe):
+def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embedded_dim, lstm=False, mean_pooling=False):
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
 
@@ -54,16 +61,14 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
     print(f'is_available(): {torch.cuda.is_available()}')
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
-
-    speech_model = LSTM(
-        input_size=40,
-        output_size=embedded_dim,
-        hidden_dim=64,
-        num_layers=num_layers,
-        dropout=0.0,
-        device=device,
-        awe=awe
-    )
+    if lstm:
+        speech_model = GRU(
+            input_size=list(speech_test_data[0][0].size())[1],
+            embedded_dim=embedded_dim
+        )
+    else:
+#        speech_model = Combiner(list(speech_test_data[0][0].size())[1], embedded_dim)
+        speech_model = SmarterAttentionNet(list(speech_test_data[0][0].size())[1], embedded_dim, embedded_dim)
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
 
     speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt'), map_location=device))
@@ -94,15 +99,15 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         pos_index = pos_neg_examples[vision_index][0]
         neg_index = pos_neg_examples[vision_index][1]
 
-        speech_target = speech_test_data[vision_index][0].to(device)
+        speech_target = torch.unsqueeze(speech_test_data[vision_index][0], 0).to(device)
         #print(speech_target.size())
-        speech_pos = speech_test_data[pos_index][0].to(device)
-        speech_neg = speech_test_data[neg_index][0].to(device)
+        speech_pos = torch.unsqueeze(speech_test_data[pos_index][0], 0).to(device)
+        speech_neg = torch.unsqueeze(speech_test_data[neg_index][0], 0).to(device)
 
         # TODO: THIS SHOULD BE HANDLED WHEN CREATING THE FEATURES
-        speech_target = speech_target.permute(0, 2, 1)
-        speech_pos = speech_pos.permute(0, 2, 1)
-        speech_neg = speech_neg.permute(0, 2, 1)
+        # speech_target = speech_target.permute(0, 2, 1)
+        # speech_pos = speech_pos.permute(0, 2, 1)
+        # speech_neg = speech_neg.permute(0, 2, 1)
 
         embedded_speech_target = speech_model(speech_target).cpu().detach().numpy()
         embedded_speech_pos = speech_model(speech_pos).cpu().detach().numpy()
@@ -134,9 +139,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         cosine_distances_rand.append(('target', scipy.spatial.distance.cosine(embedded_vision, embedded_speech_target), vision[1]))
 
         for i in random_indexes:
-            speech_data = speech_test_data[i][0].to(device)
-            # TODO: SHOULD BE HANDLED WHEN CREATING FEATURES
-            speech_data = speech_data.permute(0, 2, 1)
+            speech_data = torch.unsqueeze(speech_test_data[i][0], 0).to(device)
+            # TODOtorch. unsqueeze (input, dim): SHOULD BE HANDLED WHEN CREATING FEATURES
+            # speech_data = speech_data.permute(0, 2, 1)
             embedded_speech = speech_model(speech_data).cpu().detach().numpy()
             cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_vision, embedded_speech), speech_test_data[i][1]))
 
@@ -165,9 +170,9 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         pn_fout.write(f'S->V,')
         rand_fout.write(f'S->V,')
 
-        speech_data = speech[0].to(device)
+        speech_data = torch.unsqueeze(speech[0], 0).to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
-        speech_data = speech_data.permute(0, 2, 1)
+        # speech_data = speech_data.permute(0, 2, 1)
         embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
         #
@@ -242,15 +247,16 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
 
 def main():
     ARGS, unused = parse_args()
-
+    
     v_to_s_mrr_pn, v_to_s_mrr_rand, s_to_v_mrr_pn, s_to_v_mrr_rand = evaluate(
-        ARGS.experiment,
-        ARGS.test_data_path,
-        ARGS.pos_neg_examples_file,
-        ARGS.num_layers,
-        ARGS.gpu_num,
-        ARGS.embedded_dim,
-        ARGS.awe
+        experiment=ARGS.experiment,
+        test_path=ARGS.test_data_path,
+        pos_neg_examples=ARGS.pos_neg_examples_file,
+        num_layers=ARGS.num_layers,
+        gpu_num=ARGS.gpu_num,
+        embedded_dim=ARGS.embedded_dim,
+        lstm=ARGS.lstm,
+        mean_pooling=ARGS.mean_pooling
     )
 
     print(f'V->S p/n: {v_to_s_mrr_pn}')
