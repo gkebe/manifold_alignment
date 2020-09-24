@@ -136,7 +136,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
         for i in random_indexes:
             speech_data = speech_test_data[i][0].to(device)
             # TODO: SHOULD BE HANDLED WHEN CREATING FEATURES
-            speech_data = speech_data.permute(0, 2, 1)
+            # speech_data = speech_data.permute(0, 2, 1)
             embedded_speech = speech_model(speech_data).cpu().detach().numpy()
             cosine_distances_rand.append(('random', scipy.spatial.distance.cosine(embedded_vision, embedded_speech), speech_test_data[i][1]))
 
@@ -167,7 +167,7 @@ def evaluate(experiment, test_path, pos_neg_examples, num_layers, gpu_num, embed
 
         speech_data = speech[0].to(device)
         # TODO: NEEDS TO BE HANDLED WHEN CREATING FEATURES
-        speech_data = speech_data.permute(0, 2, 1)
+        # speech_data = speech_data.permute(0, 2, 1)
         embedded_speech = speech_model(speech_data).cpu().detach().numpy()
 
         #
