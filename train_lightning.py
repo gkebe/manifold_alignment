@@ -61,7 +61,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     model = triplet_loss(train_data=train_data, pos_neg_examples=pos_neg_examples)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
-    trainer = pl.Trainer()
+    trainer = pl.Trainer(auto_lr_find = True)
 
     # Run learning rate finder
     lr_finder = trainer.lr_find(model, train_dataloader=train_dataloader)
