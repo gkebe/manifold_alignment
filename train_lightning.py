@@ -64,7 +64,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     trainer = pl.Trainer()
 
     # Run learning rate finder
-    lr_finder = trainer.tuner.lr_find(model, train_dataloader=train_dataloader)
+    lr_finder = trainer.lr_find(model, train_dataloader=train_dataloader)
 
     # Results can be found in
     print(lr_finder.results)
