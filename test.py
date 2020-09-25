@@ -200,6 +200,8 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         recalls_macro.append(r)
         f1s_macro.append(f)
 
+    # OIC get average f1 per classes and send arround with number of instances
+
     # TODO: output to file
     print('\n ')
     print(experiment_name+'_'+str(embedded_dim))

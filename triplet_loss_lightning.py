@@ -90,4 +90,4 @@ class triplet_loss(pl.LightningModule):
     def get_optimizers(self):
         language_optimizer = torch.optim.Adam(self.language_model.parameters(), lr=self.lr)
         vision_optimizer = torch.optim.Adam(self.vision_model.parameters(), lr=self.lr)
-        return [language_optimizer, vision_optimizer]
+        return [language_optimizer, vision_optimizer], []
