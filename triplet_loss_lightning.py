@@ -26,6 +26,8 @@ class triplet_loss(pl.LightningModule):
 
         return x
 
+    def lr_lambda(self, e):
+        return self.lr
     def get_examples_batch(self, pos_neg_examples, indices, train_data, instance_names):
         examples = [pos_neg_examples[i] for i in indices]
 
@@ -90,4 +92,6 @@ class triplet_loss(pl.LightningModule):
     def get_optimizers(self):
         language_optimizer = torch.optim.Adam(self.language_model.parameters(), lr=self.lr)
         vision_optimizer = torch.optim.Adam(self.vision_model.parameters(), lr=self.lr)
-        return [language_optimizer, vision_optimizer], []
+        language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, self.lr_lambda)
+        vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, self.lr_lambda)
+        return [language_optimizer, vision_optimizer], [language_scheduler, vision_scheduler]
