@@ -12,7 +12,7 @@ class triplet_loss(pl.LightningModule):
         self.speech_train_data = [l for l, _, _, _ in train_data]
         self.vision_train_data = [v for _, v, _, _ in train_data]
         self.instance_names = [i for _, _, _, i in train_data]
-        language_dim = list(self.language_train_data[0].size())[0]
+        language_dim = list(self.speech_train_data[0].size())[0]
         # Eitel dimension
         vision_dim = list(self.vision_train_data[0].size())[0]
         self.vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
