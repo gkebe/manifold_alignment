@@ -132,8 +132,6 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
-    swa_language_model = AveragedModel(language_model)
-    swa_vision_model = AveragedModel(vision_model)
     # Finish model setup
     # If we want to load pretrained models to continue training...
     if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
@@ -146,7 +144,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
 
     language_model.to(device)
     vision_model.to(device)
-
+    swa_language_model = AveragedModel(language_model)
+    swa_vision_model = AveragedModel(vision_model)
     print(lr)
 
     # Initialize the optimizers and loss function.
@@ -235,7 +234,6 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
                 marker = ["aba"]
-            print(rand_int)
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
 
