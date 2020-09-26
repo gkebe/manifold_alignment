@@ -89,6 +89,5 @@ class triplet_loss(pl.LightningModule):
         loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
         return loss
     def configure_optimizers(self):
-        language_optimizer = torch.optim.Adam(self.language_model.parameters(), lr=self.learning_rate)
-        vision_optimizer = torch.optim.Adam(self.vision_model.parameters(), lr=self.learning_rate)
-        return [language_optimizer, vision_optimizer]
+        optimizer = torch.optim.Adam(list(self.language_model.parameters()) + list(self.vision_model.parameters()), lr=self.learning_rate)
+        return optimizer
