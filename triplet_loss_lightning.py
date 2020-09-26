@@ -6,7 +6,7 @@ import random
 from losses import triplet_loss_cosine_abext_marker
 
 class triplet_loss(pl.LightningModule):
-    def __init__(self, train_data, pos_neg_examples, embedded_dim=1024):
+    def __init__(self, train_data, pos_neg_examples, learning_rate, embedded_dim=1024):
         # Language (BERT): 3072, Vision + Depth (ResNet152): 2048 * 2
         super(triplet_loss, self).__init__()
         self.language_train_data = [l for l, _, _, _ in train_data]
@@ -18,6 +18,7 @@ class triplet_loss(pl.LightningModule):
         self.vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
         self.language_model = RowNet(language_dim, embedded_dim=embedded_dim)
         self.pos_neg_examples = pos_neg_examples
+        self.learning_rate = learning_rate
 
     def forward(self, x):
         x = F.leaky_relu(self.fc1(x), negative_slope=.2)
