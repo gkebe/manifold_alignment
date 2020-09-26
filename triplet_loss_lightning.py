@@ -36,7 +36,7 @@ class triplet_loss(pl.LightningModule):
             [instance_names[i[0]] for i in examples][0],
             [instance_names[i[1]] for i in examples][0],
         )
-    def training_step(self, batch):
+    def training_step(self, batch, batch_idx):
         speech, vision, object_name, instance_name = batch
 
         speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = self.get_examples_batch(self.pos_neg_examples, self.indices,
