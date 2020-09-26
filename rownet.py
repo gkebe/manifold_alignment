@@ -41,16 +41,12 @@ class RowNet(torch.nn.Module):
         self.fc1 = torch.nn.Linear(input_size, input_size)
         self.fc2 = torch.nn.Linear(input_size, input_size)
         self.fc3 = torch.nn.Linear(input_size, embedded_dim)
+        self.dropout1 = torch.nn.Dropout(p=0.5)
+        self.dropout2 = torch.nn.Dropout(p=0.2)
 
     def forward(self, x):
-        x = F.leaky_relu(self.fc1(x), negative_slope=.2)
-        x = F.leaky_relu(self.fc2(x), negative_slope=.2)
+        x = F.leaky_relu(self.dropout1(self.fc1(x)), negative_slope=.2)
+
+        x = F.leaky_relu(self.dropout2(self.fc2(x)), negative_slope=.2)
         x = self.fc3(x)
-        # print(x.shape)
-        # x = cov(x)
-        # print(x.shape)
-        # x = torch.triu(x)
-        # print(x.shape)
-        # x = torch.norm(x)
-        # print(x.shape)
         return x
