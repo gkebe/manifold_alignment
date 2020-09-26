@@ -40,17 +40,12 @@ def parse_args():
         help='Dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
        help='batch size for learning')
+    parser.add_argument('--lr', type=float, default=0.001,
+       help='learning rate')
 
     return parser.parse_known_args()
 
 # Add learning rate scheduling.
-def lr_lambda(e):
-    if e < 100:
-        return 0.001
-    elif e < 200:
-        return 0.0001
-    else:
-        return 0.00001
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
@@ -62,9 +57,16 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
+def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024, lr=0.001):
     """Train joint embedding networks."""
 
+    def lr_lambda(e):
+        if e < 100:
+            return lr
+        elif e < 200:
+            return lr*0.1
+        else:
+            return lr*0.01
     epochs = int(epochs)
     margin = float(margin)
     gpu_num = str(gpu_num)
@@ -387,7 +389,8 @@ def main():
         margin=0.4,
         seed=ARGS.seed,
         batch_size=ARGS.batch_size,
-        embedded_dim=ARGS.embedded_dim
+        embedded_dim=ARGS.embedded_dim,
+        lr=ARGS.lr
     )
 
 if __name__ == '__main__':
