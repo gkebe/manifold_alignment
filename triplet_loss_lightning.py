@@ -26,8 +26,6 @@ class triplet_loss(pl.LightningModule):
 
         return x
 
-    def lr_lambda(self, e):
-        return self.lr
     def get_examples_batch(self, pos_neg_examples, indices, train_data, instance_names):
         examples = [pos_neg_examples[i] for i in indices]
 
@@ -89,7 +87,7 @@ class triplet_loss(pl.LightningModule):
             marker = ["aba"]
         loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
         return loss
-    def get_optimizers(self):
+    def configure_optimizers(self):
         language_optimizer = torch.optim.Adam(self.language_model.parameters(), lr=self.lr)
         vision_optimizer = torch.optim.Adam(self.vision_model.parameters(), lr=self.lr)
         return [language_optimizer, vision_optimizer]
