@@ -9,7 +9,7 @@ class triplet_loss(pl.LightningModule):
     def __init__(self, train_data, pos_neg_examples, learning_rate, embedded_dim=1024):
         # Language (BERT): 3072, Vision + Depth (ResNet152): 2048 * 2
         super(triplet_loss, self).__init__()
-        self.language_train_data = [l for l, _, _, _ in train_data]
+        self.speech_train_data = [l for l, _, _, _ in train_data]
         self.vision_train_data = [v for _, v, _, _ in train_data]
         self.instance_names = [i for _, _, _, i in train_data]
         language_dim = list(self.language_train_data[0].size())[0]
