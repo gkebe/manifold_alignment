@@ -47,6 +47,10 @@ class RowNet(torch.nn.Module):
         x = F.leaky_relu(self.fc2(x), negative_slope=.2)
         x = self.fc3(x)
         print(x.shape)
-        x = torch.norm(torch.triu(cov(x)))
+        x = cov(x)
+        print(x.shape)
+        x = torch.triu(x)
+        print(x.shape)
+        x = torch.norm(x)
         print(x.shape)
         return x
