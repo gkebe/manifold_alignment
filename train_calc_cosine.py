@@ -169,7 +169,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     # for saving to files
     batch_loss = []
     avg_epoch_loss = []
-
+    swa_start = 150
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
@@ -377,10 +377,14 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
         # reporting results for this epoch
         print('*********** epoch is finished ***********')
         print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
-
-        # Update learning rate schedulers.
-        language_scheduler.step()
-        vision_scheduler.step()
+        if epoch > swa_start:
+            swa_language_model.update_parameters(language_model)
+            swa_language_scheduler.step()
+            swa_vision_model.update_parameters(vision_model)
+            swa_vision_scheduler.step()
+        else:        # Update learning rate schedulers.
+            language_scheduler.step()
+            vision_scheduler.step()
 
     print('Training Done!')
     train_fout.close()
