@@ -58,7 +58,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     print(f'Pulling examples from file {pos_neg_examples_file}...')
     with open(pos_neg_examples_file, 'rb') as fin:
         pos_neg_examples = pickle.load(fin)
-    model = triplet_loss(train_data=train_data, pos_neg_examples=pos_neg_examples)
+    model = triplet_loss(train_data=train_data, pos_neg_examples=pos_neg_examples, learning_rate=0.001)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
     trainer = pl.Trainer(auto_lr_find = True)
