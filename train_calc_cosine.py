@@ -235,6 +235,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
                 marker = ["aba"]
+            print(rand_int)
             print(target.shape)
             print(pos.shape)
             print(neg.shape)
