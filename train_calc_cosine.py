@@ -148,8 +148,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     print(lr)
 
     # Initialize the optimizers and loss function.
-    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=lr)
-    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=lr)
+    language_optimizer = torch.optim.AdamW(language_model.parameters(), lr=lr)
+    vision_optimizer = torch.optim.AdamW(vision_model.parameters(), lr=lr)
 
 #    language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
 #    vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
