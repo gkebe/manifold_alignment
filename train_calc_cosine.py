@@ -292,6 +292,21 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
             pickle.dump(batch_loss, fout)
         print(f'Starting evaluation: {datetime.datetime.now().time()}')
 
+        # reporting results for this epoch
+        print('*********** epoch is finished ***********')
+        print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
+        if epoch > swa_start:
+            swa_language_model.update_parameters(language_model)
+            swa_language_scheduler.step()
+            swa_vision_model.update_parameters(vision_model)
+            swa_vision_scheduler.step()
+        else:        # Update learning rate schedulers.
+            language_scheduler.step()
+            vision_scheduler.step()
+
+        torch.optim.swa_utils.update_bn(language_train_data, swa_language_model)
+        torch.optim.swa_utils.update_bn(vision_train_data, swa_vision_model)
+
         language2language_fout = open(os.path.join(results_dir, 'language2language_epoch'+str(epoch)+'.txt'), 'w')
         language2language_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
         for language_index, language in enumerate(language_test_data):
@@ -303,19 +318,19 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             language_data = language[0].to(device)
-            embedded_language = language_model(language_data).cpu().detach().numpy()
+            embedded_language = swa_language_model(language_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = swa_language_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
                 language2language_fout.write(f'{language[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = swa_language_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
                 language2language_fout.write(f'{language[1]},{neg_language[1]},n,{dist}\n')
         language2language_fout.close()
@@ -332,19 +347,19 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             vision_data = vision[0].to(device)
-            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+            embedded_vision = swa_vision_model(vision_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_vision = vision_test_data[i]
                 pos_vision_data = pos_vision[0].to(device)
-                embedded_pos_vision = vision_model(pos_vision_data).cpu().detach().numpy()
+                embedded_pos_vision = swa_vision_model(pos_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_vision)
                 vision2vision_fout.write(f'{vision[1]},{pos_vision[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_vision = vision_test_data[i]
                 neg_vision_data = neg_vision[0].to(device)
-                embedded_neg_vision = vision_model(neg_vision_data).cpu().detach().numpy()
+                embedded_neg_vision = swa_vision_model(neg_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_vision)
                 vision2vision_fout.write(f'{vision[1]},{neg_vision[1]},n,{dist}\n')
         vision2vision_fout.close()
@@ -361,34 +376,22 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             vision_data = vision[0].to(device)
-            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+            embedded_vision = swa_vision_model(vision_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = swa_language_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
                 vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = swa_language_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
                 vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
         vision2language_fout.close()
-        # reporting results for this epoch
-        print('*********** epoch is finished ***********')
-        print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
-        if epoch > swa_start:
-            swa_language_model.update_parameters(language_model)
-            swa_language_scheduler.step()
-            swa_vision_model.update_parameters(vision_model)
-            swa_vision_scheduler.step()
-        else:        # Update learning rate schedulers.
-            language_scheduler.step()
-            vision_scheduler.step()
-
     print('Training Done!')
     train_fout.close()
 
