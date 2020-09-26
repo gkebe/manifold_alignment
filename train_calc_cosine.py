@@ -154,8 +154,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
 #    language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
 #    vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
 
-    language_scheduler = torch.optim.lr_scheduler.CyclicLR(language_optimizer)
-    vision_scheduler = torch.optim.lr_scheduler.CyclicLR(vision_optimizer)
+    language_scheduler = torch.optim.lr_scheduler.CyclicLR(language_optimizer, base_lr=lr, max_lr=lr*6)
+    vision_scheduler = torch.optim.lr_scheduler.CyclicLR(vision_optimizer, base_lr=lr, max_lr=lr*6)
     # Put models into training mode.
     language_model.train()
     vision_model.train()
