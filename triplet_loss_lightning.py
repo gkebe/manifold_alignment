@@ -19,7 +19,7 @@ class triplet_loss(pl.LightningModule):
         self.language_model = RowNet(language_dim, embedded_dim=embedded_dim)
         self.pos_neg_examples = pos_neg_examples
         self.learning_rate = learning_rate
-
+        self.train_data = train_data
     def forward(self, x):
         x = F.leaky_relu(self.fc1(x), negative_slope=.2)
         x = F.leaky_relu(self.fc2(x), negative_slope=.2)
@@ -38,11 +38,11 @@ class triplet_loss(pl.LightningModule):
         )
     def training_step(self, batch, batch_idx):
         speech, vision, object_name, instance_name = batch
-
-        speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = self.get_examples_batch(self.pos_neg_examples, self.indices,
+        indices = list(range(batch_idx * len(batch), min((batch_idx + 1) * len(batch), len(self.train_data))))
+        speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = self.get_examples_batch(self.pos_neg_examples, indices,
                                                                                               self.speech_train_data,
                                                                                               self.instance_names)
-        vision_pos, vision_neg, vision_pos_instance, vision_neg_instance = self.get_examples_batch(self.pos_neg_examples, self.indices,
+        vision_pos, vision_neg, vision_pos_instance, vision_neg_instance = self.get_examples_batch(self.pos_neg_examples, indices,
                                                                                               self.vision_train_data,
                                                                                               self.instance_names)
         case = random.randint(1, 8)
