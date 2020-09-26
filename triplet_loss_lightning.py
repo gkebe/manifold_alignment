@@ -16,7 +16,7 @@ class triplet_loss(pl.LightningModule):
         # Eitel dimension
         vision_dim = list(self.vision_train_data[0].size())[0]
         self.vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
-        self.language_model = RowNet(language_dim, embedded_dim=embedded_dim)
+        self.speech_model = RowNet(language_dim, embedded_dim=embedded_dim)
         self.pos_neg_examples = pos_neg_examples
         self.learning_rate = learning_rate
         self.train_data = train_data
@@ -89,5 +89,5 @@ class triplet_loss(pl.LightningModule):
         loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
         return loss
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(list(self.language_model.parameters()) + list(self.vision_model.parameters()), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(list(self.speech_model.parameters()) + list(self.vision_model.parameters()), lr=self.learning_rate)
         return optimizer
