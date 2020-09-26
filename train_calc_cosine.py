@@ -20,6 +20,7 @@ from rownet import RowNet
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
+from torch.optim.swa_utils import AveragedModel, SWALR
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name',
@@ -131,7 +132,8 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
-
+    swa_language_model = AveragedModel(language_model)
+    swa_vision_model = AveragedModel(vision_model)
     # Finish model setup
     # If we want to load pretrained models to continue training...
     if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
@@ -148,14 +150,17 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     print(lr)
 
     # Initialize the optimizers and loss function.
-    language_optimizer = torch.optim.AdamW(language_model.parameters(), lr=lr)
-    vision_optimizer = torch.optim.AdamW(vision_model.parameters(), lr=lr)
+    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=lr)
+    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=lr)
 
-#    language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
-#    vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
+    language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
+    vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
 
-    language_scheduler = torch.optim.lr_scheduler.CyclicLR(language_optimizer, base_lr=lr, max_lr=lr*6)
-    vision_scheduler = torch.optim.lr_scheduler.CyclicLR(vision_optimizer, base_lr=lr, max_lr=lr*6)
+#    language_scheduler = torch.optim.lr_scheduler.CyclicLR(language_optimizer, base_lr=lr, max_lr=lr*6)
+#    vision_scheduler = torch.optim.lr_scheduler.CyclicLR(vision_optimizer, base_lr=lr, max_lr=lr*6)
+
+    swa_language_scheduler = SWALR(language_optimizer, swa_lr=0.001)
+    swa_vision_scheduler = SWALR(vision_optimizer, swa_lr=0.001)
     # Put models into training mode.
     language_model.train()
     vision_model.train()
