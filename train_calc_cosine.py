@@ -236,9 +236,6 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 neg = language_model(language_neg_examples.to(device))
                 marker = ["aba"]
             print(rand_int)
-            print(target.shape)
-            print(pos.shape)
-            print(neg.shape)
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
 
