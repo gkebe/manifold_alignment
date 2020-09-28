@@ -8,19 +8,22 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', help='path to data pkl file')
     parser.add_argument('--train', default='train_data.pkl', help='train data out path')
+    parser.add_argument('--dev', default='dev_data.pkl', help='dev data out path')
     parser.add_argument('--test', default='test_data.pkl', help='test data out path')
     parser.add_argument('--train_percentage', type=float, default=0.8, help='percentage of data dedicated to train')
     parser.add_argument('--seed', type=int, default=75, help='Random seed for split reproducability')
 
     return parser.parse_known_args()
 
-def gl_dataset(data_location, train_percentage=0.8, seed=None):
+def gl_dataset(data_location, train_percentage=0.6, seed=None):
     with open(data_location, 'rb') as fin:
         data = pickle.load(fin)
 
-    train, test = gl_train_test_split(data, train_percentage=train_percentage, seed=seed)
+    train, dev_test = gl_train_test_split(data, train_percentage=train_percentage, seed=seed)
+    dev ,test = gl_train_test_split(dev_test, train_percentage=0.5, seed=seed)
 
     train_data = GLData(train)
+    dev_data = GLData(dev)
     test_data = GLData(test)
 
     # kwargs = {
@@ -31,7 +34,7 @@ def gl_dataset(data_location, train_percentage=0.8, seed=None):
     #     'shuffle': shuffle
     # }
 
-    return train_data, test_data
+    return train_data, dev_data, test_data
 
 def gl_train_test_split(data, train_percentage=0.8, seed=None):
     """
@@ -93,10 +96,13 @@ def main():
     with open(ARGS.data, 'rb') as fin:
         data = pickle.load(fin)
 
-    train_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed)
+    train_data, dev_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed)
 
     with open(ARGS.train, 'wb') as fout:
         pickle.dump(train_data, fout)
+
+    with open(ARGS.dev, 'wb') as fout:
+        pickle.dump(dev_data, fout)
 
     with open(ARGS.test, 'wb') as fout:
         pickle.dump(test_data, fout)

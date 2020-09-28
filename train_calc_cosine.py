@@ -20,7 +20,6 @@ from rownet import RowNet
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
-from torch.optim.swa_utils import AveragedModel, SWALR
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name',
@@ -29,6 +28,8 @@ def parse_args():
         help='Number of epochs to run for')
     parser.add_argument('--train_data', default='/home/iral/data_processing/gld_data_complete.pkl',
         help='Path to training data pkl file')
+    parser.add_argument('--dev_data', default='/home/iral/data_processing/gld_data_complete.pkl',
+        help='Path to dev data pkl file')
     parser.add_argument('--test_data', default='/home/iral/data_processing/gld_data_complete.pkl',
         help='Path to testing data pkl file')
     parser.add_argument('--gpu_num', default='0',
@@ -41,12 +42,17 @@ def parse_args():
         help='Dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
        help='batch size for learning')
-    parser.add_argument('--lr', type=float, default=0.001,
-       help='learning rate')
 
     return parser.parse_known_args()
 
 # Add learning rate scheduling.
+def lr_lambda(e):
+    if e < 100:
+        return 0.001
+    elif e < 200:
+        return 0.0001
+    else:
+        return 0.00001
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
@@ -58,22 +64,18 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024, lr=0.001):
+def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
     """Train joint embedding networks."""
 
-    def lr_lambda(e):
-        if e < 100:
-            return lr
-        elif e < 200:
-            return lr*0.1
-        else:
-            return lr*0.01
     epochs = int(epochs)
     margin = float(margin)
     gpu_num = str(gpu_num)
     procrustes = float(procrustes)
     with open(train_data_path, 'rb') as fin:
         train_data = pickle.load(fin)
+
+    with open(dev_data_path, 'rb') as fin:
+        dev_data = pickle.load(fin)
 
     #if test_data_path is not None:
     #    _, test_data = gl_loaders(test_data_path)
@@ -93,6 +95,11 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     language_test_data = [(l, i) for l, _, _, i in test_data]
     vision_test_data = [(v, i) for _, v, _, i in test_data]
     instance_names_test = [i for _, _, _, i in test_data]
+
+    language_dev_data = [(l, i) for l, _, _, i in dev_data]
+    vision_dev_data = [(v, i) for _, v, _, i in dev_data]
+    instance_names_dev = [i for _, _, _, i in dev_data]
+
     sample_size = 0
     # Setup the results and device.
     results_dir = f'./output/{experiment_name}'
@@ -132,6 +139,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
+
     # Finish model setup
     # If we want to load pretrained models to continue training...
     if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
@@ -144,22 +152,14 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
 
     language_model.to(device)
     vision_model.to(device)
-    swa_language_model = AveragedModel(language_model)
-    swa_vision_model = AveragedModel(vision_model)
-    print(lr)
 
     # Initialize the optimizers and loss function.
-    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=lr)
-    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=lr)
+    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=0.001)
+    vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
 
     language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
 
-#    language_scheduler = torch.optim.lr_scheduler.CyclicLR(language_optimizer, base_lr=lr, max_lr=lr*6)
-#    vision_scheduler = torch.optim.lr_scheduler.CyclicLR(vision_optimizer, base_lr=lr, max_lr=lr*6)
-
-    swa_language_scheduler = SWALR(language_optimizer, swa_lr=0.001)
-    swa_vision_scheduler = SWALR(vision_optimizer, swa_lr=0.001)
     # Put models into training mode.
     language_model.train()
     vision_model.train()
@@ -168,7 +168,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
     # for saving to files
     batch_loss = []
     avg_epoch_loss = []
-    swa_start = 150
+
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
@@ -234,6 +234,7 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(language_neg_examples.to(device))
                 marker = ["aba"]
+
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
 
@@ -287,21 +288,6 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
             pickle.dump(batch_loss, fout)
         print(f'Starting evaluation: {datetime.datetime.now().time()}')
 
-        # reporting results for this epoch
-        print('*********** epoch is finished ***********')
-        print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
-        if epoch > swa_start:
-            swa_language_model.update_parameters(language_model)
-            swa_language_scheduler.step()
-            swa_vision_model.update_parameters(vision_model)
-            swa_vision_scheduler.step()
-        else:        # Update learning rate schedulers.
-            language_scheduler.step()
-            vision_scheduler.step()
-
-        torch.optim.swa_utils.update_bn(language_train_data, swa_language_model)
-        torch.optim.swa_utils.update_bn(vision_train_data, swa_vision_model)
-
         language2language_fout = open(os.path.join(results_dir, 'language2language_epoch'+str(epoch)+'.txt'), 'w')
         language2language_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
         for language_index, language in enumerate(language_test_data):
@@ -313,25 +299,25 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             language_data = language[0].to(device)
-            embedded_language = swa_language_model(language_data).cpu().detach().numpy()
+            embedded_language = language_model(language_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = swa_language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
                 language2language_fout.write(f'{language[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = swa_language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
                 language2language_fout.write(f'{language[1]},{neg_language[1]},n,{dist}\n')
         language2language_fout.close()
         print(f'Wrote language2language: {datetime.datetime.now().time()}')
 
-        vision2vision_fout = open(os.path.join(results_dir, 'vision2vision_epoch'+str(epoch)+'.txt'), 'w')
+        vision2vision_fout = open(os.path.join(results_dir, 'vision2vision_epoch_test_'+str(epoch)+'.txt'), 'w')
         vision2vision_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
         for vision_index, vision in enumerate(vision_test_data):
             positive_indices = [i for i, name in enumerate(instance_names_test) if vision[1] == name]
@@ -342,19 +328,19 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             vision_data = vision[0].to(device)
-            embedded_vision = swa_vision_model(vision_data).cpu().detach().numpy()
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_vision = vision_test_data[i]
                 pos_vision_data = pos_vision[0].to(device)
-                embedded_pos_vision = swa_vision_model(pos_vision_data).cpu().detach().numpy()
+                embedded_pos_vision = vision_model(pos_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_vision)
                 vision2vision_fout.write(f'{vision[1]},{pos_vision[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_vision = vision_test_data[i]
                 neg_vision_data = neg_vision[0].to(device)
-                embedded_neg_vision = swa_vision_model(neg_vision_data).cpu().detach().numpy()
+                embedded_neg_vision = vision_model(neg_vision_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_vision)
                 vision2vision_fout.write(f'{vision[1]},{neg_vision[1]},n,{dist}\n')
         vision2vision_fout.close()
@@ -371,22 +357,117 @@ def train(experiment_name, epochs, train_data_path, test_data_path, gpu_num, pos
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             vision_data = vision[0].to(device)
-            embedded_vision = swa_vision_model(vision_data).cpu().detach().numpy()
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = swa_language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
                 vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = swa_language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
                 vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
         vision2language_fout.close()
+
+
+        language2language_fout = open(os.path.join(results_dir, 'language2language_epoch'+str(epoch)+'.txt'), 'w')
+        language2language_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
+        for language_index, language in enumerate(language_test_data):
+            positive_indices = [i for i, name in enumerate(instance_names_test) if language[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_test) if language[1] != name],
+                                             len(positive_indices))
+            if sample_size:
+                positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+                negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+
+            language_data = language[0].to(device)
+            embedded_language = language_model(language_data).cpu().detach().numpy()
+
+            for i in positive_indices:
+                pos_language = language_test_data[i]
+                pos_language_data = pos_language[0].to(device)
+                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
+                language2language_fout.write(f'{language[1]},{pos_language[1]},p,{dist}\n')
+
+            for i in negative_indices:
+                neg_language = language_test_data[i]
+                neg_language_data = neg_language[0].to(device)
+                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
+                language2language_fout.write(f'{language[1]},{neg_language[1]},n,{dist}\n')
+        language2language_fout.close()
+        print(f'Wrote language2language: {datetime.datetime.now().time()}')
+
+        vision2vision_fout = open(os.path.join(results_dir, 'vision2vision_epoch_dev_'+str(epoch)+'.txt'), 'w')
+        vision2vision_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
+        for vision_index, vision in enumerate(vision_dev_data):
+            positive_indices = [i for i, name in enumerate(instance_names_dev) if vision[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_dev) if vision[1] != name],
+                                             len(positive_indices))
+            if sample_size:
+                positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+                negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+
+            vision_data = vision[0].to(device)
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+
+            for i in positive_indices:
+                pos_vision = vision_dev_data[i]
+                pos_vision_data = pos_vision[0].to(device)
+                embedded_pos_vision = vision_model(pos_vision_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_vision)
+                vision2vision_fout.write(f'{vision[1]},{pos_vision[1]},p,{dist}\n')
+
+            for i in negative_indices:
+                neg_vision = vision_dev_data[i]
+                neg_vision_data = neg_vision[0].to(device)
+                embedded_neg_vision = vision_model(neg_vision_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_vision)
+                vision2vision_fout.write(f'{vision[1]},{neg_vision[1]},n,{dist}\n')
+        vision2vision_fout.close()
+        print(f'Wrote vision2vision: {datetime.datetime.now().time()}')
+
+        vision2language_fout = open(os.path.join(results_dir, 'vision2language_epoch'+str(epoch)+'.txt'), 'w')
+        vision2language_fout.write('vision_instance,language_instance,p/n,embedded_distance\n')
+        for vision_index, vision in enumerate(vision_dev_data):
+            positive_indices = [i for i, name in enumerate(instance_names_dev) if vision[1] == name]
+            negative_indices = random.sample([i for i, name in enumerate(instance_names_dev) if vision[1] != name],
+                                             len(positive_indices))
+            if sample_size:
+                positive_indices = random.sample(positive_indices, min(len(positive_indices), sample_size))
+                negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
+
+            vision_data = vision[0].to(device)
+            embedded_vision = vision_model(vision_data).cpu().detach().numpy()
+
+            for i in positive_indices:
+                pos_language = language_dev_data[i]
+                pos_language_data = pos_language[0].to(device)
+                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
+                vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
+
+            for i in negative_indices:
+                neg_language = language_dev_data[i]
+                neg_language_data = neg_language[0].to(device)
+                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
+                vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
+        vision2language_fout.close()
+        # reporting results for this epoch
+        print('*********** epoch is finished ***********')
+        print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
+
+        # Update learning rate schedulers.
+        language_scheduler.step()
+        vision_scheduler.step()
+
     print('Training Done!')
     train_fout.close()
 
@@ -397,14 +478,14 @@ def main():
         ARGS.experiment_name,
         ARGS.epochs,
         ARGS.train_data,
+        ARGS.dev_data,
         ARGS.test_data,
         ARGS.gpu_num,
         pos_neg_examples_file=ARGS.pos_neg_examples_file,
         margin=0.4,
         seed=ARGS.seed,
         batch_size=ARGS.batch_size,
-        embedded_dim=ARGS.embedded_dim,
-        lr=ARGS.lr
+        embedded_dim=ARGS.embedded_dim
     )
 
 if __name__ == '__main__':
