@@ -107,8 +107,8 @@ def main():
     with open(ARGS.test, 'wb') as fout:
         pickle.dump(test_data, fout)
 
-    print(f'Wrote two files\n\t{ARGS.train}\n\t{ARGS.test}')
-    print(f'Training examples: {len(train_data)}, Testing examples: {len(test_data)}')
+    print(f'Wrote three files\n\t{ARGS.train}\n\t{ARGS.dev}\n\t{ARGS.test}\n\t')
+    print(f'Training examples: {len(train_data)}, Dev examples: {len(dev_data)}, Testing examples: {len(test_data)}')
 
 if __name__ == '__main__':
     main()
