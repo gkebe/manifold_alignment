@@ -4,7 +4,7 @@ import pickle
 import sys
 
 import numpy as np
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import precision_recall_fscore_support, classification_report
 from sklearn.preprocessing import LabelEncoder
 import torch
 import matplotlib.pyplot as plt
@@ -188,9 +188,12 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
     precisions_macro = []
     recalls_macro = []
     f1s_macro = []
+    crs = []
     #print(classification_report(oit_res[i], 1/np.arange(1,len(oit_res[i])+1) > 0.01))
     for i in range(len(ground_truth)):
         p, r, f, s = precision_recall_fscore_support(ground_truth[i], predicted[i], warn_for=(), average='micro')
+        cr = classification_report(ground_truth[i], predicted[i])
+        crs.append(cr)
         precisions.append(p)
         recalls.append(r)
         f1s.append(f)
@@ -209,7 +212,7 @@ def test(experiment_name, test_data_path, gpu_num, train_data_path=None, pos_neg
         knn(language_embeddings, vision_embeddings, encoded_labels, k=3, cosine=True),
         corr_between(language_embeddings, vision_embeddings, cosine=True), np.mean(f1s), np.mean(f1s_macro))
     )
-
+    print(crs)
     # language_accuracy = language_tests.count(True) / len(language_tests)
     # vision_accuracy = vision_tests.count(True) / len(vision_tests)
     #
