@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--epochs', default=1, type=int,
         help='number of epochs to train')
     parser.add_argument('--train_data', help='path to train data')
+    parser.add_argument('--dev_data', default='/home/iral/data_processing/gld_data_complete.pkl',
+        help='Path to dev data pkl file')
     parser.add_argument('--test_data', default='/home/iral/data_processing/gld_data_complete.pkl',
         help='Path to testing data pkl file')
     parser.add_argument('--gpu_num', default='0', help='gpu id number')
