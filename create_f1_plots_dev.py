@@ -42,7 +42,7 @@ def create_plot(n, file_path, fout, title):
                 y_pred.append(False)
         
         p, r, f, s = precision_recall_fscore_support(y_true, y_pred, average='binary', zero_division=1)
-        print(f'p: {p}, r: {r}, f: {f}, s:{s}, t:{len(y_pred)}')
+        print(f'p: {p}, r: {r}, f: {f}, s:{len([i for i in y_pred if i == True])}, t:{len(y_pred)}')
         precision.append(p)
         recall.append(r)
         f1.append(f)
