@@ -64,10 +64,10 @@ def evaluate(test_data_path, pos_neg_examples_file):
         reciprocal_sum_euclid_pos_neg += 1 / euclid_rank_pos_neg
         reciprocal_sum_cosine_pos_neg += 1 / cosine_rank_pos_neg
 
-        rand_fout.write(f'{euclid_rank_random} {cosine_rank_random}\n')
-
         euclid_rank_random = random.choice([1,2,3,4,5])
         cosine_rank_random = random.choice([1,2,3,4,5])
+        rand_fout.write(f'{euclid_rank_random} {cosine_rank_random}\n')
+        
         reciprocal_sum_euclid_random += 1 / euclid_rank_random
         reciprocal_sum_cosine_random += 1 / cosine_rank_random
 
