@@ -42,9 +42,9 @@ def parse_args():
     return parser.parse_known_args()
 
 def lr_lambda(e):
-    if e < 20:
+    if e < 100:
         return 0.001
-    elif e < 40:
+    elif e < 200:
         return 0.0001
     else:
         return 0.00001
