@@ -46,7 +46,7 @@ def create_plot(n, file_path, fout, title):
         precision.append(p)
         recall.append(r)
         f1.append(f)
-    print((thresholds[i], f1[i]) for i in range(len(thresholds)))
+    print([(thresholds[i], f1[i]) for i in range(len(thresholds))])
     p_line = plt.plot(thresholds, precision, 'b', label='Precision')
     r_line = plt.plot(thresholds, recall, 'r', label='Recall')
     f_line = plt.plot(thresholds, f1, 'm', label='F1-Score')
