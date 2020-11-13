@@ -67,7 +67,7 @@ def vq_wav2vec_featurize(wav_file, gpu_num=0, bert_model='./models/bert_kmeans.p
 
     return feature
 
-def decoar_featurize(wav_file, gpu_num=0, decoar_model='artifacts/decoar-encoder-29b8e2ac.params'):
+def decoar_featurize(wav_file, gpu_num=0, decoar_model='models/decoar-encoder-29b8e2ac.params'):
     # Load the model on GPU 0
     featurizer = DeCoARFeaturizer(decoar_model, gpu=gpu_num)
     # Returns a (time, feature) NumPy array
