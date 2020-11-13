@@ -47,7 +47,7 @@ def vision_featurize(rgb, depth, gpu_num=0):
     vision_model.eval()
     rgb_data = vision_model(rgb_image.unsqueeze_(0).to(device)).detach().to('cpu')
     depth_data = vision_model(depth_image.unsqueeze_(0).to(device)).detach().to('cpu')
-    vision_data = torch.tensor(np.concatenate((depth_data.numpy(), rgb_data.numpy()), axis=1))
+    vision_data = torch.cat([depth_data, rgb_data], dim=1)
     return vision_data[0]
 # #feature = vq_wav2vec_featurize(wav_file="speech/train/fork_2_2_4.wav")
 # feature = vision_featurize(rgb="data/gold/images/color/coffee_mug/coffee_mug_1/coffee_mug_1_1.png", depth="data/gold/images/depth/coffee_mug/coffee_mug_1/coffee_mug_1_1.png")
