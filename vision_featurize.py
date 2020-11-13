@@ -50,6 +50,6 @@ def vision_featurize(rgb, depth, gpu_num=0):
     vision_data = torch.tensor(np.concatenate(depth_data.numpy(), rgb_data.numpy(), axis=0))
     return vision_data
 #feature = vq_wav2vec_featurize(wav_file="speech/train/fork_2_2_4.wav")
-feature = vision_featurize(rgb="data/gold/images/color/coffee_mug/coffee_mug_1_1.png", depth="data/gold/images/depth/coffee_mug/coffee_mug_1_1.png")
+feature = vision_featurize(rgb="data/gold/images/color/coffee_mug/coffee_mug_1/coffee_mug_1_1.png", depth="data/gold/images/depth/coffee_mug/coffee_mug_1/coffee_mug_1_1.png")
 print(feature)
 print(feature.shape)
