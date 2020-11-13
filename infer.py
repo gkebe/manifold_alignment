@@ -13,6 +13,7 @@ from datasets import GLData
 from rownet import RowNet
 import speech_featurize as sf
 import text_featurize as tf
+import vision_featurize as vf
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', help='name of experiment to test')
@@ -26,18 +27,21 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def infer(language, vision, language_type, experiment_name, gpu_num, embedded_dim):
+def infer(language, rgb, depth, language_type, experiment_name, gpu_num, embedded_dim):
 
     if language_type == "decoar":
-        sf.vq_wav2vec_featurize(language)
+        language_data = sf.vq_wav2vec_featurize(language)
     elif language_type == "vq-wav2vec":
-        sf.vq_wav2vec_featurize(language)
+        language_data = sf.vq_wav2vec_featurize(language)
     elif language_type == "transcription":
-        tf.bert_embedding(language)
+        language_data = tf.bert_embedding(language)
+
+    vision_data = vf
+
     # BERT dimension
-    language_dim = list(language_test_data[0][0].size())[0]
+    language_dim = list(language_data.size())[0]
     # Eitel dimension
-    vision_dim = list(vision_test_data[0][0].size())[0]
+    vision_dim = list(vision_data.size())[0]
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
