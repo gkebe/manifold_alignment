@@ -50,10 +50,10 @@ def infer(language, rgb, depth, language_type, experiment_name, gpu_num, embedde
 
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
-
+    print(vision_data)
     language_data.to(device)
     vision_data.to(device)
-
+    print(vision_data)
     language_model = RowNet(language_dim, embedded_dim=embedded_dim)
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     # language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
