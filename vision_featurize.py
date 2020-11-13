@@ -45,8 +45,8 @@ def vision_featurize(rgb, depth, gpu_num=0):
     vision_model.fc = Identity()
     vision_model.to(device)
     vision_model.eval()
-    rgb_data = vision_model(rgb_image.unsqueeze_(0).to(device)).detach().to('cpu')
-    depth_data = vision_model(depth_image.unsqueeze_(0).to(device)).detach().to('cpu')
+    rgb_data = vision_model(rgb_image.unsqueeze_(0).to(device)).detach().cpu()
+    depth_data = vision_model(depth_image.unsqueeze_(0).to(device)).detach().cpu()
     vision_data = torch.cat([depth_data, rgb_data], dim=1)
     return vision_data[0]
 # #feature = vq_wav2vec_featurize(wav_file="speech/train/fork_2_2_4.wav")

@@ -72,7 +72,7 @@ def decoar_featurize(wav_file, gpu_num=0, decoar_model='models/decoar-encoder-29
     featurizer = DeCoARFeaturizer(decoar_model, gpu=gpu_num)
     # Returns a (time, feature) NumPy array
     data = featurizer.file_to_feats(wav_file)
-    feature = torch.mean(torch.FloatTensor(data), dim=0)
+    feature = torch.mean(torch.FloatTensor(data), dim=0).detach().cpu()
     return feature
 # #feature = vq_wav2vec_featurize(wav_file="speech/train/fork_2_2_4.wav")
 # feature = decoar_featurize(wav_file="data/gold/speech/train/fork_2_2_4.wav")
