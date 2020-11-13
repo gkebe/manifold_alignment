@@ -65,7 +65,7 @@ def infer(language, rgb, depth, language_type, experiment_name, gpu_num, embedde
     language_model.eval()
     vision_model.eval()
 
-    print(language_model.get_device(), language_data.get_device(), vision_model.get_device(), vision_data.get_device())
+    print(next(language_model.parameters()).device, language_data.get_device(), next(vision_model.parameters()).device, vision_data.get_device())
     embedded_vision = vision_model(vision_data).cpu().detach().numpy()
     embedded_language = language_model(language_data).cpu().detach().numpy()
     dist = scipy.spatial.distance.cosine(embedded_vision, embedded_language)
