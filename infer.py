@@ -31,6 +31,7 @@ def parse_args():
 def infer(language, rgb, depth, language_type, experiment_name, gpu_num, embedded_dim):
 
     print(language_type)
+    gpu_num = int(gpu_num)
     if language_type == "decoar":
         language_data = sf.decoar_featurize(wav_file=language, gpu_num=gpu_num)
     elif language_type == "vq-wav2vec":
