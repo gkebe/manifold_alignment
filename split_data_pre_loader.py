@@ -11,17 +11,17 @@ def parse_args():
     parser.add_argument('--test', default='test_data.pkl', help='test data out path')
     parser.add_argument('--train_percentage', type=float, default=0.8, help='percentage of data dedicated to train')
     parser.add_argument('--seed', type=int, default=75, help='Random seed for split reproducability')
-    parser.add_argument('--user', default=None, help='which user to use to train')
+    parser.add_argument('--users', default=None, help='which users to use to train/test')
     
     return parser.parse_known_args()
 
-def gl_dataset(data_location, train_percentage=0.8, seed=None, user_id=None):
+def gl_dataset(data_location, train_percentage=0.8, seed=None, user_ids=None):
     with open(data_location, 'rb') as fin:
         data = pickle.load(fin)
     
     # make per user splits
-    if user_id is not None:
-        data_indicies = [i for i in range(len(data["user_ids"])) if data["user_ids"][i] == user_id]
+    if user_ids is not None:
+        data_indicies = [i for i in range(len(data["user_ids"])) if data["user_ids"][i] in user_ids]
         data['language_data'] = [data['language_data'][i] for i in data_indicies]
         data['vision_data'] = [data['vision_data'][i] for i in data_indicies]
         data['object_names'] = [data['object_names'][i] for i in data_indicies]
@@ -104,13 +104,17 @@ def main():
         data = pickle.load(fin)
     
     
-    if ARGS.user is None:
-        user = None
+    if ARGS.users is None:
+        users = None
     else:
-        user = ARGS.user 
+        users = ARGS.users
+        print(users)
+        users = users.strip('[]').split(',')
+       
+    print(users)
+            
+    train_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed, user_ids=users)
     
-    train_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed, user_id=user)
-
     with open(ARGS.train, 'wb') as fout:
         pickle.dump(train_data, fout)
 

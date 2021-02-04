@@ -76,7 +76,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     language_train_data = [l for l, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _ in train_data]
     instance_names = [i for _, _, _, i in train_data]
-
+    
     # BERT dimension
     language_dim = list(language_train_data[0].size())[0]
     # Eitel dimension
@@ -123,13 +123,13 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
     # Finish model setup
     # If we want to load pretrained models to continue training...
-    if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
-        print('Starting from pretrained networks.')
-        print(f'Loaded model_A_state.pt and model_B_state.pt from {train_results_dir}')
-        language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
-        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
-    else:
-        print('Starting from scratch to train networks.')
+#     if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
+#         print('Starting from pretrained networks.')
+#         print(f'Loaded model_A_state.pt and model_B_state.pt from {train_results_dir}')
+#         language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
+#         vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
+#     else:
+#         print('Starting from scratch to train networks.')
 
     language_model.to(device)
     vision_model.to(device)
