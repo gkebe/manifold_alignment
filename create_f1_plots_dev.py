@@ -1,7 +1,7 @@
 import argparse
 import os
 import statistics
-
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_fscore_support
@@ -29,7 +29,7 @@ def create_plot(n, file_path, fout, title):
             y_true.append(True if pn == 'p' else False)
             distances.append(float(dist))
 
-    normalized_distances = [d / max(distances) for d in distances]
+    normalized_distances = [d / 2 for d in distances]
     print(f'min n_dist = {min(normalized_distances)}; max n_dist = {max(normalized_distances)}')
     thresholds = [t / n for t in range(n + 1)]
     for threshold in thresholds:
@@ -47,19 +47,20 @@ def create_plot(n, file_path, fout, title):
         recall.append(r)
         f1.append(f)
 
-    print(thresholds)
-    print(precision)
-    print(recall)
-    print(f1)
-    p_line = plt.plot(thresholds, precision, 'b', label='Precision')
-    r_line = plt.plot(thresholds, recall, 'r', label='Recall')
-    f_line = plt.plot(thresholds, f1, 'm', label='F1-Score')
-    plt.title(title)
-    plt.xlabel('Threshold')
-    plt.ylabel('Precision/Recall/F1')
-    plt.legend()    
+    #print(thresholds)
+    #print(precision)
+    #print(recall)
+    #print(f1)
+    pickle.dump([thresholds, precision, recall, f1], open(fout, "wb"))
+    #p_line = plt.plot(thresholds, precision, 'b', label='Precision')
+    #r_line = plt.plot(thresholds, recall, 'r', label='Recall')
+    #f_line = plt.plot(thresholds, f1, 'm', label='F1-Score')
+    #plt.title(title)
+    #plt.xlabel('Threshold')
+    #plt.ylabel('Precision/Recall/F1')
+    #plt.legend()    
 
-    plt.savefig(fout)
+    #plt.savefig(fout)
 
 def main():
     ARGS, unused = parse_args()
@@ -71,7 +72,7 @@ def main():
     #v2v = os.path.join(results_dir, 'vision2vision.txt')
     #v2v_out = os.path.join(results_dir, 'v2v.png')
     v2l = os.path.join(results_dir, 'vision2language_dev_epoch299.txt')
-    v2l_out = os.path.join(results_dir, 'v2l_p_r_f1.png')
+    v2l_out = os.path.join(results_dir, f'{ARGS.experiment}_p_r_f1.pkl')
 
     #create_plot(l2l, l2l_out, 'Language to Language Embedded Cosine Distance')
     #create_plot(v2v, v2v_out, 'Vision to Vision Embedded Cosine Distance')

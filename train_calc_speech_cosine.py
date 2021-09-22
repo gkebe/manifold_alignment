@@ -2,7 +2,7 @@ import argparse
 import os
 import pickle
 import random
-
+import numpy as np
 import scipy
 import scipy.spatial
 import torch
@@ -83,24 +83,24 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     with open(train_data_path, 'rb') as fin:
         train_data = pickle.load(fin)
 
-    speech_train_data = [s for s, _, _, _ in train_data]
-    vision_train_data = [v for _, v, _, _ in train_data]
-    instance_names = [i for _, _, _, i in train_data]
+    speech_train_data = [s for s, _, _, _, _ in train_data]
+    vision_train_data = [v for _, v, _, _, _ in train_data]
+    instance_names = [i for _, _, _, i, _ in train_data]
     test_path = test_data_path
     with open(test_path, 'rb') as fin:
         test_data = pickle.load(fin)
 
-    language_test_data = [(l, i) for l, _, _, i in test_data]
-    vision_test_data = [(v, i) for _, v, _, i in test_data]
-    instance_names_test = [i for _, _, _, i in test_data]
+    language_test_data = [(l, i) for l, _, _, i, _ in test_data]
+    vision_test_data = [(v, i) for _, v, _, i, _ in test_data]
+    instance_names_test = [i for _, _, _, i, _ in test_data]
 
     dev_path = dev_data_path
     with open(dev_path, 'rb') as fin:
         dev_data = pickle.load(fin)
 
-    language_dev_data = [(l, i) for l, _, _, i in dev_data]
-    vision_dev_data = [(v, i) for _, v, _, i in dev_data]
-    instance_names_dev = [i for _, _, _, i in dev_data]
+    language_dev_data = [(l, i) for l, _, _, i, _ in dev_data]
+    vision_dev_data = [(v, i) for _, v, _, i, _ in dev_data]
+    instance_names_dev = [i for _, _, _, i, _ in dev_data]
 
     with open(pos_neg_examples_file, 'rb') as fin:
         pos_neg_examples = pickle.load(fin)
@@ -156,7 +156,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
         epoch_loss = 0.0
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             train_fout.write(f'{epoch},{step},')
-            speech, vision, object_name, instance_name = batch
+            speech, vision, object_name, instance_name, user_id = batch
             train_fout.write(f'{instance_name[0]},')
 
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
@@ -450,7 +450,9 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
 
 def main():
     ARGS, unused = parse_args()
-
+    torch.manual_seed(ARGS.seed)
+    random.seed(ARGS.seed)
+    np.random.seed(ARGS.seed)
     train(
         experiment_name=ARGS.experiment,
         epochs=ARGS.epochs,

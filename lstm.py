@@ -42,7 +42,6 @@ class LSTM(torch.nn.Module):
             for t, x in enumerate(X.split(1, 1)):
                 #print(x)
                 #print(X.size())
-                #print(x.size())
 
                 out, (h_t, c_t) = self.lstm(x, (h_t, c_t))
                 # perform TBPTT if set
@@ -58,14 +57,15 @@ class LSTM(torch.nn.Module):
                 min(self.awe, seq_len)
             ).flatten(1)
             #print(f'out  size: {out.size()}')
-
+        if out.shape[1] < self.hidden_dim * self.awe:
+            out = F.pad(out, (0,(self.hidden_dim * self.awe - out.shape[1]), 0, 0))
         #hidden = h_t.view(self.num_layers, batch_size, self.hidden_dim)[-1]
         #print(f'hidden size: {hidden.size()}')
         # This does some reshaping, might be an old idiom
         # see: https://discuss.pytorch.org/t/when-and-why-do-we-use-contiguous/47588
         #hidden = self.contiguous().view(-1, self.hidden_dim)
         #hidden = self.fc(hidden)
-
         out = self.fc(out)
 
         return out
+

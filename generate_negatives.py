@@ -64,7 +64,7 @@ def main():
     with open(ARGS.data_file, 'rb') as fin:
         data = pickle.load(fin)
     
-    language_data, object_names = [l for l, _, _, _ in data], [o for _, _, o, _ in data]
+    language_data, object_names = [l for l, _, _, _, _ in data], [o for _, _, o, _, _ in data]
     for i, language in enumerate(language_data):
         if i % 100 == 0:
             print(f'Calculating {i}/{len(language_data)}')

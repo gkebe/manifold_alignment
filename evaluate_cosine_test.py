@@ -16,6 +16,7 @@ from rownet import RowNet
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', help='name of experiment to test')
+    parser.add_argument('--group', help='name of experiment to test')
     parser.add_argument('--test_data_path', help='path to testing data')
     parser.add_argument('--threshold', required=True, type=float,
         help='embedded_dim')
@@ -25,10 +26,10 @@ def parse_args():
         help='gpu id number')
     parser.add_argument('--embedded_dim', default=1024, type=int,
         help='embedded_dim')
-
+    
     return parser.parse_known_args()
 
-def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold):
+def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold, group):
 
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
@@ -45,7 +46,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
-    v2l = os.path.join(results_dir, 'vision2language_test_epoch_299.txt')
+    v2l = os.path.join(results_dir, f'vision2language_{group}.txt')
     y_true = []
     distances = []
     y_pred = []
@@ -339,7 +340,8 @@ def main():
         ARGS.pos_neg_examples_file,
         ARGS.gpu_num,
         ARGS.embedded_dim,
-        threshold=ARGS.threshold
+        threshold=ARGS.threshold,
+        group=ARGS.group
     )
 
     #print(f'V -> L p/n: {v_to_l_pos_neg}')

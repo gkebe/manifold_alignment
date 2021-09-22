@@ -20,6 +20,7 @@ from rownet import RowNet
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
+import time
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name',
@@ -47,9 +48,9 @@ def parse_args():
 
 # Add learning rate scheduling.
 def lr_lambda(e):
-    if e < 50:
+    if e < 100:
         return 0.001
-    elif e < 100:
+    elif e < 200:
         return 0.0001
     else:
         return 0.00001
@@ -472,6 +473,8 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     train_fout.close()
 
 def main():
+# Wait for 5 seconds
+    time.sleep(5000)
     ARGS, unused = parse_args()
     torch.manual_seed(ARGS.seed)
     random.seed(ARGS.seed)

@@ -8,25 +8,27 @@ from torch.utils.data import Dataset, DataLoader
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', help='path to data pkl file')
-    parser.add_argument('--train', default='train_data.pkl', help='train data out path')
-    parser.add_argument('--dev', default='dev_data.pkl', help='dev data out path')
     parser.add_argument('--test', default='test_data.pkl', help='test data out path')
     parser.add_argument('--train_percentage', type=float, default=0.8, help='percentage of data dedicated to train')
     parser.add_argument('--seed', type=int, default=75, help='Random seed for split reproducability')
-
+    parser.add_argument('--users', default=None, help='which users to use to test')
     return parser.parse_known_args()
 
-def gl_dataset(data_location, train_percentage=0.6, seed=None):
+def gl_dataset(data_location, train_percentage=0.6, seed=None, user_ids=None):
     with open(data_location, 'rb') as fin:
         data = pickle.load(fin)
 
     train, dev_test = gl_train_test_split(data, train_percentage=train_percentage, seed=seed)
     dev ,test = gl_train_test_split(dev_test, train_percentage=0.5, seed=seed)
-
-    train_data = GLData(train)
-    dev_data = GLData(dev)
+    if user_ids is not None:
+      data_indicies = [i for i in range(len(test["user_ids"])) if test["user_ids"][i] in user_ids]
+      test['language_data'] = [test['language_data'][i] for i in data_indicies]
+      test['vision_data'] = [test['vision_data'][i] for i in data_indicies]
+      test['object_names'] = [test['object_names'][i] for i in data_indicies]
+      test['instance_names'] = [test['instance_names'][i] for i in data_indicies]
+      test['image_names'] = [test['image_names'][i] for i in data_indicies]
+      test['user_ids'] = [test['user_ids'][i] for i in data_indicies]
     test_data = GLData(test)
-
     # kwargs = {
     #     'num_workers': num_workers,
     #     'pin_memory': pin_memory,
@@ -35,7 +37,7 @@ def gl_dataset(data_location, train_percentage=0.6, seed=None):
     #     'shuffle': shuffle
     # }
 
-    return train_data, dev_data, test_data
+    return test_data
 
 def gl_train_test_split(data, train_percentage=0.8, seed=None):
     """
@@ -112,20 +114,21 @@ def main():
 
     with open(ARGS.data, 'rb') as fin:
         data = pickle.load(fin)
+    if ARGS.users is None:
+        users = None
+    else:
+        users = ARGS.users
+        print(users)
+        users = users.strip('[]').split(',')
 
-    train_data, dev_data, test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed)
+    print(users)
 
-    with open(ARGS.train, 'wb') as fout:
-        pickle.dump(train_data, fout)
-
-    with open(ARGS.dev, 'wb') as fout:
-        pickle.dump(dev_data, fout)
+    test_data = gl_dataset(ARGS.data, ARGS.train_percentage, seed=ARGS.seed, user_ids=users)
 
     with open(ARGS.test, 'wb') as fout:
         pickle.dump(test_data, fout)
-
-    print(f'Wrote three files\n\t{ARGS.train}\n\t{ARGS.dev}\n\t{ARGS.test}\n\t')
-    print(f'Training examples: {len(train_data)}, Dev examples: {len(dev_data)}, Testing examples: {len(test_data)}')
+        
+    print(f'Testing examples: {len(test_data)}')
 
 if __name__ == '__main__':
     main()

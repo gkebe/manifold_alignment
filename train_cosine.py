@@ -73,9 +73,9 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     #if test_data_path is not None:
     #    _, test_data = gl_loaders(test_data_path)
 
-    language_train_data = [l for l, _, _, _ in train_data]
-    vision_train_data = [v for _, v, _, _ in train_data]
-    instance_names = [i for _, _, _, i in train_data]
+    language_train_data = [l for l, _, _, _, _ in train_data]
+    vision_train_data = [v for _, v, _, _, _ in train_data]
+    instance_names = [i for _, _, _, i, _ in train_data]
 
     # BERT dimension
     language_dim = list(language_train_data[0].size())[0]
@@ -107,7 +107,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
     if pos_neg_examples_file is None:
         print('Calculating examples from scratch...')
         pos_neg_examples = []
-        for anchor_language, _, _, _ in train_data:
+        for anchor_language, _, _, _, _ in train_data:
             pos_neg_examples.append(get_pos_neg_examples(anchor_language, language_train_data))
         with open(f'{experiment_name}_train_examples.pkl', 'wb') as fout:
             pickle.dump(pos_neg_examples, fout)
@@ -156,7 +156,7 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             train_fout.write(f'{epoch},{step},')
         #for i, (language, vision, object_name, instance_name) in enumerate(train_data):
-            language, vision, object_name, instance_name = batch
+            language, vision, object_name, instance_name, _ = batch
             train_fout.write(f'{instance_name[0]},')
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
             language_pos_examples, language_neg_examples, language_pos_instance, language_neg_instance = get_examples_batch(pos_neg_examples,indices,language_train_data, instance_names)
@@ -280,7 +280,9 @@ def train(experiment_name, epochs, train_data_path, gpu_num, pos_neg_examples_fi
 
 def main():
     ARGS, unused = parse_args()
-
+    torch.manual_seed(ARGS.seed)
+    random.seed(ARGS.seed)
+    np.random.seed(ARGS.seed)
     train(
         ARGS.experiment_name,
         ARGS.epochs,

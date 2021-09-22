@@ -17,8 +17,6 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', help='name of experiment to test')
     parser.add_argument('--test_data_path', help='path to testing data')
-    parser.add_argument('--threshold', required=True, type=float,
-        help='embedded_dim')
     parser.add_argument('--pos_neg_examples_file', default=None,
         help='path to examples pkl')
     parser.add_argument('--gpu_num', default='0',
@@ -28,7 +26,7 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold):
+def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim):
 
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
@@ -45,26 +43,6 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
-    v2l = os.path.join(results_dir, 'vision2language_test_epoch_299.txt')
-    y_true = []
-    distances = []
-    y_pred = []
-    with open(v2l, 'r') as fin:
-        headers = fin.readline() 
-        for line in fin:
-            instance_1, instance_2, pn, dist = line.strip().split(',')
-
-            y_true.append(True if pn == 'p' else False)
-            distances.append(float(dist))
-
-    normalized_distances = [d / 2 for d in distances]
-    for nd in normalized_distances:
-      if nd < threshold:
-        y_pred.append(True)
-      else:
-        y_pred.append(False)
-    p, r, f, s = precision_recall_fscore_support(y_true, y_pred, average='binary', zero_division=1)
-    print(f"F1 score: {f}")
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
 
@@ -338,8 +316,7 @@ def main():
         ARGS.test_data_path,
         ARGS.pos_neg_examples_file,
         ARGS.gpu_num,
-        ARGS.embedded_dim,
-        threshold=ARGS.threshold
+        ARGS.embedded_dim
     )
 
     #print(f'V -> L p/n: {v_to_l_pos_neg}')
