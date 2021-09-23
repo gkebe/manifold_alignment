@@ -127,7 +127,7 @@ class GLDataBias(Dataset):
         speaker_ids = self.data["user_ids"]
 
         speaker_data = [[speakers_dict[s]["accent"], speakers_dict[s]["gender"], speakers_dict[s]["hoarseness"],
-                               speakers_dict[s]["creak"]] for s in speaker_ids]
+                               speakers_dict[s]["creak"]] if s in speakers_dict else ["no", "man", "no", "no"] for s in speaker_ids ]
         speaker_data = [[others_dict[a], gender_dict[g], others_dict[h], others_dict[c]] for a, g, h, c in
                               speaker_data]
         self.data["speaker_data"] = speaker_data
