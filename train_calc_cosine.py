@@ -102,7 +102,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
 
     sample_size = 0
     # Setup the results and device.
-    results_dir = f'./output/{experiment_name}'
+    results_dir = f'./output/{experiment_name}_bias'
     os.makedirs(results_dir, exist_ok=True)
 
     train_results_dir = os.path.join(results_dir, 'train_results/')
