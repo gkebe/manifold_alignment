@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10, MNIST, SVHN
+import pandas as pd
 
 class DataDomain(Dataset):
     # Adapted from: https://github.com/adambielski/siamese-triplet/blob/master/datasets.py
