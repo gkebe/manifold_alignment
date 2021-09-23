@@ -136,4 +136,4 @@ class GLDataBias(Dataset):
 
     def __getitem__(self, i):
 
-        return self.data['language_data'][i], self.data['vision_data'][i], self.data['object_names'][i], self.data['instance_names'][i], self.data['user_ids'][i], self.data["speaker_data"][i]
+        return self.data['language_data'][i], self.data['vision_data'][i], self.data['object_names'][i], self.data['instance_names'][i], self.data['user_ids'][i], torch.tensor(self.data["speaker_data"][i])
