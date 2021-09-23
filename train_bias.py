@@ -21,6 +21,8 @@ from rownet import RowNet, Classifier
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
+from torch.nn import CrossEntropyLoss
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name',
