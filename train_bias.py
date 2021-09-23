@@ -223,30 +223,30 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
-                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos, speaker_preds_neg])
-                                              , torch.cat([speaker_data, speaker_data_pos_examples, speaker_data_neg_examples]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos, speaker_preds_neg]).flatten()
+                                              , torch.cat([speaker_data, speaker_data_pos_examples, speaker_data_neg_examples]).flatten().to(device))
                 marker = ["aaa"]
             elif rand_int == 3:
                 train_fout.write(f'{language_pos_instance},{language_neg_instance},vll')
                 target = vision_model(vision.to(device))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
-                cl_loss = classification_loss(torch.cat([speaker_preds_pos, speaker_preds_neg])
-                                              , torch.cat([speaker_data_pos_examples, speaker_data_neg_examples]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds_pos, speaker_preds_neg]).flatten()
+                                              , torch.cat([speaker_data_pos_examples, speaker_data_neg_examples]).flatten().to(device))
                 marker = ["baa"]
             elif rand_int == 4:
                 train_fout.write(f'{vision_pos_instance},{vision_neg_instance},lvv')
                 target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                cl_loss = classification_loss(torch.cat([speaker_preds]), torch.cat([speaker_data]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds]).flatten(), torch.cat([speaker_data]).flatten().to(device))
                 marker = ["abb"]
             elif rand_int == 5:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},vvl')
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
-                cl_loss = classification_loss(torch.cat([speaker_preds_neg]), torch.cat([speaker_data_neg_examples]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds_neg]).flatten(), torch.cat([speaker_data_neg_examples]).flatten().to(device))
                 marker = ["bba"]
             elif rand_int == 6:
                 train_fout.write(f'{language_pos_instance},{vision_neg_instance},llv')
@@ -254,26 +254,25 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = vision_model(vision_neg_examples.to(device))
                 print(torch.cat(
-                        [speaker_data, speaker_data_pos_examples]).to(device).shape)
-                print(torch.cat([speaker_preds, speaker_preds_pos]).shape)
-                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]), torch.cat(
-                        [speaker_data, speaker_data_pos_examples]).to(device))
+                        [speaker_data, speaker_data_pos_examples]).flatten().to(device).shape)
+                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]).flatten(), torch.cat(
+                        [speaker_data, speaker_data_pos_examples]).flatten().to(device))
                 marker = ["aab"]
             elif rand_int == 7:
                 train_fout.write(f'{language_pos_instance},{vision_neg_instance},vlv')
                 target = vision_model(vision.to(device))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = vision_model(vision_neg_examples.to(device))
-                cl_loss = classification_loss(torch.cat([speaker_preds_pos])
-                                              , torch.cat([speaker_data_pos_examples]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds_pos]).flatten()
+                                              , torch.cat([speaker_data_pos_examples]).flatten().to(device))
                 marker = ["bab"]
             elif rand_int == 8:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
                 target = language_model(torch.cat([speaker_embedding, language.to_device()], dim=-1))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
-                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_neg])
-                                              , torch.cat([speaker_data, speaker_data_neg_examples]).to(device))
+                cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_neg]).flatten()
+                                              , torch.cat([speaker_data, speaker_data_neg_examples]).flatten().to(device))
                 marker = ["aba"]
 
             t_loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
