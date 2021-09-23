@@ -115,3 +115,24 @@ class GLData(Dataset):
 
     def __getitem__(self, i):
         return self.data['language_data'][i], self.data['vision_data'][i], self.data['object_names'][i], self.data['instance_names'][i], self.data['user_ids'][i]
+
+class GLDataBias(Dataset):
+    def __init__(self, dataset, speakers_tsv):
+        self.data = dataset.data
+        speakers_df = pd.read_csv(speakers_tsv, sep="\t")
+        speakers_dict = speakers_df.set_index("worker_id").to_dict()
+        gender_dict = {"man": 0, "woman": 1, "undet": 2}
+        others_dict = {"no": 0, "yes": 1}
+        speaker_ids = data["user_ids"]
+
+        speaker_data = [[speakers_dict[s]["accent"], speakers_dict[s]["gender"], speakers_dict[s]["hoarsenes"],
+                               speakers_dict[s]["creak"]] for s in speaker_ids]
+        speaker_data = [[others_dict[a], gender_dict[g], others_dict[h], others_dict[c]] for a, g, h, c in
+                              speaker_data]
+        self.data["speaker_data"] = speaker_data
+    def __len__(self):
+        return len(self.data['object_names'])
+
+    def __getitem__(self, i):
+
+        return self.data['language_data'][i], self.data['vision_data'][i], self.data['object_names'][i], self.data['instance_names'][i], self.data['user_ids'][i], self.data["speaker_data"][i]
