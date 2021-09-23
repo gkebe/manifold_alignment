@@ -121,7 +121,7 @@ class GLDataBias(Dataset):
     def __init__(self, dataset, speakers_tsv):
         self.data = dataset.data
         speakers_df = pd.read_csv(speakers_tsv, sep="\t")
-        speakers_dict = speakers_df.set_index("worker_id").to_dict()
+        speakers_dict = speakers_df.set_index("worker_id").T.to_dict()
         gender_dict = {"man": 0, "woman": 1, "undet": 2}
         others_dict = {"no": 0, "yes": 1}
         speaker_ids = self.data["user_ids"]
