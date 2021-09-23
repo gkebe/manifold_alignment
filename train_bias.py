@@ -216,7 +216,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 target = vision_model(vision.to(device))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
-                cl_loss = torch.tensor([0.0], requires_grad=True)
+                cl_loss = torch.tensor([0.0], requires_grad=True).to(device)
                 marker = ["bbb"]
             elif rand_int == 2:
                 train_fout.write(f'{language_pos_instance},{language_neg_instance},lll,')
