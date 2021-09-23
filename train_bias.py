@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 import numpy as np
+import pands as pd
 import scipy
 import scipy.spatial
 from sklearn.metrics import precision_recall_fscore_support
