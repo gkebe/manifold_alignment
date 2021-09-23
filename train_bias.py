@@ -145,7 +145,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
         with open(pos_neg_examples_file, 'rb') as fin:
             pos_neg_examples = pickle.load(fin)
 
-    language_model = RowNet(language_dim, embedded_dim=embedded_dim)
+    language_model = RowNet(language_dim+embedded_dim, embedded_dim=embedded_dim)
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
     classifier = Classifier(language_dim, embedded_dim=embedded_dim)
 
