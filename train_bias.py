@@ -236,7 +236,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 marker = ["baa"]
             elif rand_int == 4:
                 train_fout.write(f'{vision_pos_instance},{vision_neg_instance},lvv')
-                target = language_model(torch.cat([speaker_embedding, language], dim=-1))
+                target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = vision_model(vision_neg_examples.to(device))
                 cl_loss = classification_loss(torch.cat([speaker_preds]), torch.cat([speaker_data]))
@@ -250,7 +250,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 marker = ["bba"]
             elif rand_int == 6:
                 train_fout.write(f'{language_pos_instance},{vision_neg_instance},llv')
-                target = language_model(torch.cat([speaker_embedding, language], dim=-1))
+                target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = vision_model(vision_neg_examples.to(device))
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]), torch.cat(
@@ -266,7 +266,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 marker = ["bab"]
             elif rand_int == 8:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
-                target = language_model(torch.cat([speaker_embedding, language], dim=-1))
+                target = language_model(torch.cat([speaker_embedding, language.to_device()], dim=-1))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_neg])
