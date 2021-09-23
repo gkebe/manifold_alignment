@@ -21,7 +21,7 @@ class Classifier(torch.nn.Module):
         # Language (BERT): 3072, Vision + Depth (ResNet152): 2048 * 2
         super(Classifier, self).__init__()
         self.fc1 = torch.nn.Linear(input_size, embedded_dim)
-        self.fc2 = torch.nn.Linear(embedded_dim, 2)
+        self.fc2 = torch.nn.Linear(embedded_dim, 4)
 
     def forward(self, x):
         speaker_embedding = F.leaky_relu(self.fc1(x), negative_slope=.2)
