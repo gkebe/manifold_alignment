@@ -29,7 +29,7 @@ def triplet_loss_cosine_abext_marker(anchor, positive, negative, marker, margin=
     marker_types = ['aaa', 'aab', 'aba', 'baa', 'bba', 'bab', 'abb', 'bbb']
     marker_dict = {k: [i for i in range(len(marker)) if marker[i] == k] for k in marker_types}
     print(marker_dict)
-    print(amchor)
+    print(anchor)
     l = 0.0
     num = 0
 
