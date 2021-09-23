@@ -124,7 +124,7 @@ class GLDataBias(Dataset):
         speakers_dict = speakers_df.set_index("worker_id").to_dict()
         gender_dict = {"man": 0, "woman": 1, "undet": 2}
         others_dict = {"no": 0, "yes": 1}
-        speaker_ids = data["user_ids"]
+        speaker_ids = self.data["user_ids"]
 
         speaker_data = [[speakers_dict[s]["accent"], speakers_dict[s]["gender"], speakers_dict[s]["hoarsenes"],
                                speakers_dict[s]["creak"]] for s in speaker_ids]
