@@ -21,7 +21,7 @@ from rownet import RowNet, Classifier
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
-from torch.nn import BCELoss
+from torch.nn import BCEWithLogitsLoss
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -184,7 +184,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     # for saving to files
     batch_loss = []
     avg_epoch_loss = []
-    classification_loss = BCELoss(reduction='sum')
+    classification_loss = BCEWithLogitsLoss(reduction='sum')
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
