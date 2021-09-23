@@ -255,6 +255,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 neg = vision_model(vision_neg_examples.to(device))
                 print(torch.cat(
                         [speaker_data, speaker_data_pos_examples]).flatten().to(device).shape)
+                print(torch.cat([speaker_preds, speaker_preds_pos]).flatten().shape)
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]).flatten(), torch.cat(
                         [speaker_data, speaker_data_pos_examples]).flatten().to(device))
                 marker = ["aab"]
