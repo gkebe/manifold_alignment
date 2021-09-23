@@ -266,16 +266,15 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 marker = ["bab"]
             elif rand_int == 8:
                 train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
-                target = language_model(torch.cat([speaker_embedding, language.to_device()], dim=-1))
+                target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = vision_model(vision_pos_examples.to(device))
                 neg = language_model(torch.cat([speaker_embedding_neg, language_neg_examples.to(device)], dim=-1))
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_neg]).flatten()
                                               , torch.cat([speaker_data, speaker_data_neg_examples]).flatten().to(device))
                 marker = ["aba"]
-            print(target.shape)
             t_loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
 
-            loss = c_loss * t_loss + t_loss
+            loss = cl_loss * t_loss + t_loss
             # loss = triplet_loss(target, pos, neg)
 
             target = target.cpu().detach().numpy()
