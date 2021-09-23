@@ -63,8 +63,8 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
 
     return (
-        torch.stack([train_data[i[0]] for i in examples]),
-        torch.stack([train_data[i[1]] for i in examples]),
+        torch.stack([torch.tensor(train_data[i[0]]) for i in examples]),
+        torch.stack([torch.tensor(train_data[i[1]]) for i in examples]),
         [instance_names[i[0]] for i in examples][0],
         [instance_names[i[1]] for i in examples][0],
     )
