@@ -272,7 +272,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_neg]).flatten()
                                               , torch.cat([speaker_data, speaker_data_neg_examples]).flatten().to(device))
                 marker = ["aba"]
-
+            print(target.shape)
             t_loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
 
             loss = c_loss * t_loss + t_loss
