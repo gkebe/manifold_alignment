@@ -98,15 +98,15 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     with open(test_path, 'rb') as fin:
         test_data = GLDataBias(pickle.load(fin), speakers_tsv)
 
-    language_test_data = [(l, i) for l, _, _, i, _ in test_data]
-    vision_test_data = [(v, i) for _, v, _, i, _ in test_data]
-    instance_names_test = [i for _, _, _, i, _ in test_data]
+    language_test_data = [(l, i) for l, _, _, i, _, _ in test_data]
+    vision_test_data = [(v, i) for _, v, _, i, _, _ in test_data]
+    instance_names_test = [i for _, _, _, i, _, _ in test_data]
     speaker_test_data = [s for _, _, _, _, _, s in test_data]
 
-    language_dev_data = [(l, i) for l, _, _, i, _ in dev_data]
-    vision_dev_data = [(v, i) for _, v, _, i, _ in dev_data]
+    language_dev_data = [(l, i) for l, _, _, i, _, _ in dev_data]
+    vision_dev_data = [(v, i) for _, v, _, i, _, _ in dev_data]
     speaker_dev_data = [s for _, _, _, _, _, s in dev_data]
-    instance_names_dev = [i for _, _, _, i, _ in dev_data]
+    instance_names_dev = [i for _, _, _, i, _, _ in dev_data]
 
     sample_size = 0
     # Setup the results and device.
