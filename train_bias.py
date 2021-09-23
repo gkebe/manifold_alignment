@@ -253,6 +253,9 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = vision_model(vision_neg_examples.to(device))
+                print(torch.cat(
+                        [speaker_data, speaker_data_pos_examples]).to(device).shape)
+                print(torch.cat([speaker_preds, speaker_preds_pos]).shape)
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]), torch.cat(
                         [speaker_data, speaker_data_pos_examples]).to(device))
                 marker = ["aab"]
