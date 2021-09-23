@@ -21,7 +21,7 @@ from rownet import RowNet, Classifier
 from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
-from torch.nn import CrossEntropyLoss
+from torch.nn import BCELoss
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -184,7 +184,7 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     # for saving to files
     batch_loss = []
     avg_epoch_loss = []
-    classification_loss = CrossEntropyLoss(reduction='sum')
+    classification_loss = BCELoss(reduction='sum')
     train_fout.write('epoch,step,target,pos,neg,case,pos_dist,neg_dist,loss\n')
     for epoch in tqdm(range(epochs), desc="Epoch"):
         epoch_loss = 0.0
@@ -253,9 +253,6 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 target = language_model(torch.cat([speaker_embedding, language.to(device)], dim=-1))
                 pos = language_model(torch.cat([speaker_embedding_pos, language_pos_examples.to(device)], dim=-1))
                 neg = vision_model(vision_neg_examples.to(device))
-                print(torch.cat(
-                        [speaker_data, speaker_data_pos_examples]).flatten().to(device).shape)
-                print(torch.cat([speaker_preds, speaker_preds_pos]).flatten().shape)
                 cl_loss = classification_loss(torch.cat([speaker_preds, speaker_preds_pos]).flatten(), torch.cat(
                         [speaker_data, speaker_data_pos_examples]).flatten().to(device))
                 marker = ["aab"]
