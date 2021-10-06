@@ -45,15 +45,6 @@ def parse_args():
 
     return parser.parse_known_args()
 
-# Add learning rate scheduling.
-def lr_lambda(e):
-    if e < 50:
-        return 0.001
-    elif e < 100:
-        return 0.0001
-    else:
-        return 0.00001
-
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
 
@@ -156,6 +147,8 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     # Initialize the optimizers and loss function.
     language_optimizer = torch.optim.Adam(language_model.parameters(), lr=0.001)
     vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
+
+    lr_lambda = lambda epoch : 0.001 if epoch < int(epochs/3) else (0.0001 if epoch < int(epochs/3) * 2 else 0.00001)
 
     language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
