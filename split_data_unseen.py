@@ -63,7 +63,7 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None):
     #        [i for i, name in enumerate(data['object_names']) if name == object_name],
     #        int(train_percentage * data['object_names'].count(object_name))
     #    )
-    train_indices = [i for i in range(len(data['object_names'])) if data['object_names'][i] in train_objets]
+    train_indices = [i for i in range(len(data['object_names'])) if data['object_names'][i] in train_objects]
     test_indices = [i for i in range(len(data['object_names'])) if i not in train_indices]
 
     train['language_data'] = [data['language_data'][i] for i in train_indices]
