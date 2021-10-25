@@ -45,7 +45,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
-    v2l = os.path.join(results_dir, 'vision2language_test_epoch_299.txt')
+    v2l = os.path.join(results_dir, 'vision2language_test_epoch_179.txt')
     y_true = []
     distances = []
     y_pred = []
