@@ -9,7 +9,7 @@ from sklearn.metrics import precision_recall_fscore_support
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', help='experiment name')
-    parser.add_argument('--n', type=int, default=20,
+    parser.add_argument('--n', type=int, default=50,
         help='number of bins 0 to 1 for threshold')
 
     return parser.parse_known_args()
