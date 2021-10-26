@@ -3,8 +3,7 @@
  
 - [Approach](#approach)
 - [Dataset](#dataset)
-- [Setup](#setup)
-    * [Requirements](#requirements)
+- [Requirements](#requirements)
 - [How to use](#howto)
     * [Featurization](#featurization)
     * [Preprocessing](#preprocessing)
@@ -23,6 +22,31 @@ of real-world items." [[1]](#1).
 
 The dataset is available [here](https://github.com/iral-lab/gold/edit/main/README.md).
 
+## Requirements
+```
+ dataset==1.5.0
+ flair==0.9
+ matplotlib==3.4.0
+ numpy==1.19.2
+ ordered_set==4.0.2
+ pandas==1.2.4
+ scikit_learn==1.0.1
+ scipy==1.6.2
+ skimage==0.0
+ torch==1.7.1
+ torchvision==0.8.2
+ tqdm==4.59.0
+ transformers==4.11.3
+ umap==0.1.1
+```
+
+For speech featurization,
+```
+ fairseq==0.10.2
+ fairseq.egg==info
+ torchaudio==0.7.0a0+a853dff
+ SoundFile==0.10.3.post1
+```
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
