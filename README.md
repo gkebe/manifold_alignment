@@ -1,5 +1,16 @@
 # Manifold Alignment for GoLD Dataset
-
+## Table Of Contents
+ 
+- [Approach](#approach)
+- [Dataset](#dataset)
+- [Setup](#setup)
+    * [Requirements](#requirements)
+- [How to use](#howto)
+    * [Featurization](#featurization)
+    * [Preprocessing](#preprocessing)
+    * [Training](#training)
+    * [Evaluation](#evaluation)
+  
 ## Approach
 
 "A cross-modality manifold alignment procedure that leverages triplet loss to jointly learn consistent, multi-modal embeddings of language-based concepts
