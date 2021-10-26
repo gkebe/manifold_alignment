@@ -5,10 +5,10 @@
 - [Dataset](#dataset)
 - [Requirements](#requirements)
 - [How to use](#howto)
-    * [Featurization](#featurization)
-    * [Preprocessing](#preprocessing)
-    * [Training](#training)
-    * [Evaluation](#evaluation)
+    * [1. Featurization](#featurization)
+    * [2. Preprocessing](#preprocessing)
+    * [3. Training](#training)
+    * [4. Evaluation](#evaluation)
 - [References](#references)
   
 ## Approach
@@ -47,6 +47,8 @@ For speech featurization,
  torchaudio==0.7.0a0+a853dff
  SoundFile==0.10.3.post1
 ```
+## How to use
+### 1. Featurization
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
