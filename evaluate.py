@@ -25,10 +25,12 @@ def parse_args():
         help='gpu id number')
     parser.add_argument('--embedded_dim', default=1024, type=int,
         help='embedded_dim')
+    parser.add_argument('--epoch', type=int, default=299,
+        help='F1 at epoch')
 
     return parser.parse_known_args()
 
-def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold):
+def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold, epoch):
 
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
@@ -45,7 +47,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
-    v2l = os.path.join(results_dir, 'vision2language_test_epoch_179.txt')
+    v2l = os.path.join(results_dir, f'vision2language_test_epoch_{epoch}.txt')
     y_true = []
     distances = []
     y_pred = []
@@ -339,7 +341,8 @@ def main():
         ARGS.pos_neg_examples_file,
         ARGS.gpu_num,
         ARGS.embedded_dim,
-        threshold=ARGS.threshold
+        threshold=ARGS.threshold,
+        epoch=ARGS.epoch
     )
 
     #print(f'V -> L p/n: {v_to_l_pos_neg}')

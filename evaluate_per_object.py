@@ -19,15 +19,16 @@ def parse_args():
     parser.add_argument('--experiment_name', help='name of experiment to test')
     parser.add_argument('--threshold', required=True, type=float,
         help='embedded_dim')
-
+    parser.add_argument('--epoch', type=int, default=299,
+        help='F1 at epoch')
     return parser.parse_known_args()
 
-def evaluate(experiment_name, threshold):
+def evaluate(experiment_name, threshold, epoch):
    fs = dict()
    for i in range(1,6):    
         results_dir = f'./output/{experiment_name}_{i}_bias'
         train_results_dir = os.path.join(results_dir, 'train_results/')
-        v2l = os.path.join(results_dir, 'vision2language_test_epoch_220.txt')
+        v2l = os.path.join(results_dir, f'vision2language_test_epoch_{epoch}.txt')
         y_true = {}
         distances = {}
         y_pred = {}
@@ -63,7 +64,8 @@ def main():
 
     evaluate(
         ARGS.experiment_name,
-        threshold=ARGS.threshold
+        threshold=ARGS.threshold,
+        epoch=ARGS.epoch
     )
 
 if __name__ == '__main__':
