@@ -23,7 +23,7 @@ Kebe et al. (2021).
 A Spoken Language Dataset of Descriptions for Speech-Based Grounded Language Learning 
 Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 1).
 
-Please cite these works if you use this code.
+Please cite these works if you use this code:
 
 ```
 @inproceedings{nguyen2021practical,
