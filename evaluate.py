@@ -8,6 +8,7 @@ import scipy
 import scipy.spatial
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import precision_recall_fscore_support
 
 from datasets import GLData
 from rownet import RowNet
@@ -16,6 +17,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', help='name of experiment to test')
     parser.add_argument('--test_data_path', help='path to testing data')
+    parser.add_argument('--threshold', required=True, type=float,
+        help='embedded_dim')
     parser.add_argument('--pos_neg_examples_file', default=None,
         help='path to examples pkl')
     parser.add_argument('--gpu_num', default='0',
@@ -25,15 +28,15 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim):
+def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, embedded_dim, threshold):
 
     pn_fout = open('./pn_eval_output.txt', 'w')
     rand_fout = open('./rand_eval_output.txt', 'w')
     with open(test_data_path, 'rb') as fin:
         test_data = pickle.load(fin)
 
-    language_test_data = [(l, i) for l, _, _, i in test_data]
-    vision_test_data = [(v, i) for _, v, _, i in test_data]
+    language_test_data = [(l, i) for l, _, _, i, _ in test_data]
+    vision_test_data = [(v, i) for _, v, _, i, _ in test_data]
 
     # BERT dimension
     language_dim = list(language_test_data[0][0].size())[0]
@@ -42,7 +45,26 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
     results_dir = f'./output/{experiment_name}'
     train_results_dir = os.path.join(results_dir, 'train_results/')
+    v2l = os.path.join(results_dir, 'vision2language_test_epoch_179.txt')
+    y_true = []
+    distances = []
+    y_pred = []
+    with open(v2l, 'r') as fin:
+        headers = fin.readline() 
+        for line in fin:
+            instance_1, instance_2, pn, dist = line.strip().split(',')
 
+            y_true.append(True if pn == 'p' else False)
+            distances.append(float(dist))
+
+    normalized_distances = [d / 2 for d in distances]
+    for nd in normalized_distances:
+      if nd < threshold:
+        y_pred.append(True)
+      else:
+        y_pred.append(False)
+    p, r, f, s = precision_recall_fscore_support(y_true, y_pred, average='binary', zero_division=1)
+    print(f"F1 score: {f}")
     device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device_name)
 
@@ -128,7 +150,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         v_to_l_pn_counts[euclid_rank_pos_neg] += 1
 
-        print(f'Pos/Neg {vision[1]}, e: {euclid_rank_pos_neg}, c:{cosine_rank_pos_neg}')
+        # print(f'Pos/Neg {vision[1]}, e: {euclid_rank_pos_neg}, c:{cosine_rank_pos_neg}')
 
         euclidean_distances_random = []
         cosine_distances_random = []
@@ -170,7 +192,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         v_to_l_rand_counts[euclid_rank_random] += 1
 
-        print(f'Random {vision[1]}, e: {euclid_rank_random}, c:{cosine_rank_random}')
+        # print(f'Random {vision[1]}, e: {euclid_rank_random}, c:{cosine_rank_random}')
 
     euclid_mean_reciprocal_rank_pos_neg = reciprocal_sum_euclid_pos_neg / len(language_test_data)
     cosine_mean_reciprocal_rank_pos_neg = reciprocal_sum_cosine_pos_neg / len(language_test_data)
@@ -246,7 +268,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         l_to_v_pn_counts[euclid_rank_pos_neg] += 1
 
-        print(f'Pos/Neg {language[1]}, e: {euclid_rank_pos_neg}, c:{cosine_rank_pos_neg}')
+        # print(f'Pos/Neg {language[1]}, e: {euclid_rank_pos_neg}, c:{cosine_rank_pos_neg}')
 
         euclidean_distances_random = []
         cosine_distances_random = []
@@ -288,7 +310,7 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
 
         l_to_v_rand_counts[euclid_rank_random] += 1
 
-        print(f'Random {language[1]}, e: {euclid_rank_random}, c:{cosine_rank_random}')
+        # print(f'Random {language[1]}, e: {euclid_rank_random}, c:{cosine_rank_random}')
 
     euclid_mean_reciprocal_rank_pos_neg = reciprocal_sum_euclid_pos_neg / len(language_test_data)
     cosine_mean_reciprocal_rank_pos_neg = reciprocal_sum_cosine_pos_neg / len(language_test_data)
@@ -296,12 +318,12 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     euclid_mean_reciprocal_rank_random = reciprocal_sum_euclid_random / len(language_test_data)
     cosine_mean_reciprocal_rank_random = reciprocal_sum_cosine_random / len(language_test_data)
 
-    l_to_v_pos_neg, l_to_v_random = euclid_mean_reciprocal_rank_pos_neg, euclid_mean_reciprocal_rank_random
+    l_to_v_pos_neg, l_to_v_random = cosine_mean_reciprocal_rank_pos_neg, cosine_mean_reciprocal_rank_random
 
-    print(f'v_to_l_pn_counts: {v_to_l_pn_counts}')
-    print(f'v_to_l_rand_counts: {v_to_l_rand_counts}')
-    print(f'l_to_v_pn_counts: {l_to_v_pn_counts}')
-    print(f'l_to_v_rand_counts: {l_to_v_rand_counts}')
+    #print(f'v_to_l_pn_counts: {v_to_l_pn_counts}')
+    #print(f'v_to_l_rand_counts: {v_to_l_rand_counts}')
+    #print(f'l_to_v_pn_counts: {l_to_v_pn_counts}')
+    #print(f'l_to_v_rand_counts: {l_to_v_rand_counts}')
 
     pn_fout.close()
     rand_fout.close()
@@ -316,13 +338,14 @@ def main():
         ARGS.test_data_path,
         ARGS.pos_neg_examples_file,
         ARGS.gpu_num,
-        ARGS.embedded_dim
+        ARGS.embedded_dim,
+        threshold=ARGS.threshold
     )
 
-    print(f'V -> L p/n: {v_to_l_pos_neg}')
-    print(f'V -> L rand: {v_to_l_random}')
-    print(f'L -> V p/n: {l_to_v_pos_neg}')
-    print(f'L -> V rand: {l_to_v_random}')
+    #print(f'V -> L p/n: {v_to_l_pos_neg}')
+    #print(f'V -> L rand: {v_to_l_random}')
+    print(f'Triplet MRR: {l_to_v_pos_neg}')
+    print(f'Subset MRR: {l_to_v_random}')
 
 if __name__ == '__main__':
     main()

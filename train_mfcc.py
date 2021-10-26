@@ -2,48 +2,60 @@ import argparse
 import os
 import pickle
 import random
-import subprocess
-import sys
-
 import numpy as np
 import scipy
 import scipy.spatial
-from sklearn.metrics import precision_recall_fscore_support
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader, SequentialSampler
+#import torchaudio
 from tqdm import tqdm
-from torch.utils.data import (DataLoader, SequentialSampler)
 
-from datasets import gl_loaders, GLData
-from losses import triplet_loss_vanilla
+from datasets import GLData
+from lstm import LSTM
+from rnn import RNN
 from rownet import RowNet
-from utils import save_embeddings, load_embeddings, get_pos_neg_examples
 from losses import triplet_loss_cosine_abext_marker
 import datetime
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment_name',
-        help='Name for output folders')
-    parser.add_argument('--epochs', default=20, type=int,
-        help='Number of epochs to run for')
-    parser.add_argument('--train_data', default='/home/iral/data_processing/gld_data_complete.pkl',
-        help='Path to training data pkl file')
+    parser.add_argument('--experiment', help='path to experiment output')
+    parser.add_argument('--epochs', default=1, type=int,
+        help='number of epochs to train')
+    parser.add_argument('--train_data', help='path to train data')
     parser.add_argument('--dev_data', default='/home/iral/data_processing/gld_data_complete.pkl',
         help='Path to dev data pkl file')
     parser.add_argument('--test_data', default='/home/iral/data_processing/gld_data_complete.pkl',
         help='Path to testing data pkl file')
-    parser.add_argument('--gpu_num', default='0',
-        help='gpu id number')
-    parser.add_argument('--pos_neg_examples_file', default=None,
-        help='path to examples pkl')
+    parser.add_argument('--gpu_num', default='0', help='gpu id number')
+    parser.add_argument('--pos_neg_examples_file',
+        help='path to pos/neg examples pkl')
     parser.add_argument('--seed', type=int, default=75,
-        help='random seed for train test split')
+        help='random seed for reproducability')
     parser.add_argument('--embedded_dim', default=1024, type=int,
-        help='Dimension of embedded manifold')
+        help='dimension of embedded manifold')
     parser.add_argument('--batch_size', type=int, default=1,
-       help='batch size for learning')
+        help='training batch size')
+    parser.add_argument('--num_layers', type=int, default=1,
+        help='number of hidden layers')
+    parser.add_argument('--awe', type=int, default=32,
+        help='number of hidden units to keep')
+    parser.add_argument('--h', type=int, default=None,
+        help='Value for TBPTT')
 
     return parser.parse_known_args()
+
+def lr_lambda(e):
+    if e < 100:
+        return 0.001
+    elif e < 200:
+        return 0.0001
+    else:
+        return 0.00001
+
+#def lr_lambda(epoch):
+#    return .95 ** epoch
 
 def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
     examples = [pos_neg_examples[i] for i in indices]
@@ -55,30 +67,25 @@ def get_examples_batch(pos_neg_examples, indices, train_data, instance_names):
         [instance_names[i[1]] for i in examples][0],
     )
 
-def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_path, gpu_num, pos_neg_examples_file=None, margin=0.4, procrustes=0.0, seed=None, batch_size=1, embedded_dim=1024):
-    """Train joint embedding networks."""
+def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_path, pos_neg_examples_file, batch_size, embedded_dim, gpu_num, seed, num_layers, h, awe, margin=0.4):
 
-    epochs = int(epochs)
-    margin = float(margin)
-    gpu_num = str(gpu_num)
-    procrustes = float(procrustes)
+    results_dir = f'./output/{experiment_name}'
+    os.makedirs(results_dir, exist_ok=True)
+
+    train_results_dir = os.path.join(results_dir, 'train_results/')
+    os.makedirs(train_results_dir, exist_ok=True)
+
+    train_fout = open(os.path.join(train_results_dir, 'train_out.txt'), 'w')
+
+    print(f'cuda:{gpu_num}; cuda is available? {torch.cuda.is_available()}')
+    device = torch.device(f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu')
+
     with open(train_data_path, 'rb') as fin:
         train_data = pickle.load(fin)
 
-    with open(dev_data_path, 'rb') as fin:
-        dev_data = pickle.load(fin)
-
-    #if test_data_path is not None:
-    #    _, test_data = gl_loaders(test_data_path)
-
-    language_train_data = [l for l, _, _, _, _ in train_data]
+    speech_train_data = [s for s, _, _, _, _ in train_data]
     vision_train_data = [v for _, v, _, _, _ in train_data]
     instance_names = [i for _, _, _, i, _ in train_data]
-
-    # BERT dimension
-    language_dim = list(language_train_data[0].size())[0]
-    # Eitel dimension
-    vision_dim = list(vision_train_data[0].size())[0]
     test_path = test_data_path
     with open(test_path, 'rb') as fin:
         test_data = pickle.load(fin)
@@ -87,78 +94,60 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     vision_test_data = [(v, i) for _, v, _, i, _ in test_data]
     instance_names_test = [i for _, _, _, i, _ in test_data]
 
+    dev_path = dev_data_path
+    with open(dev_path, 'rb') as fin:
+        dev_data = pickle.load(fin)
+
     language_dev_data = [(l, i) for l, _, _, i, _ in dev_data]
     vision_dev_data = [(v, i) for _, v, _, i, _ in dev_data]
     instance_names_dev = [i for _, _, _, i, _ in dev_data]
 
-    sample_size = 0
-    # Setup the results and device.
-    results_dir = f'./output/{experiment_name}'
-    os.makedirs(results_dir, exist_ok=True)
+    with open(pos_neg_examples_file, 'rb') as fin:
+        pos_neg_examples = pickle.load(fin)
 
-    train_results_dir = os.path.join(results_dir, 'train_results/')
-    os.makedirs(os.path.join(train_results_dir), exist_ok=True)
+    # TODO: grab speech dimension from speech data tensor
+    # TODO: set some of these from ARGS
+    speech_dim = list(speech_train_data[0].size())[1]
+    speech_model = LSTM(
+        input_size=speech_dim,
+        output_size=embedded_dim,
+        hidden_dim=64,
+        awe=32,
+        num_layers=num_layers,
+        dropout=0.0,
+        device=device
+    )
 
-    train_fout = open(os.path.join(train_results_dir, 'train_out.txt'), 'w')
+    # Sets number of time steps for truncated back propogation through time
+    speech_model.set_TBPTT(h)
 
-    device_name = f'cuda:{gpu_num}' if torch.cuda.is_available() else 'cpu'
-    device = torch.device(device_name)
-
-    with open(os.path.join(results_dir, 'hyperparams_train.txt'), 'w') as f:
-        f.write('Command used to run: python \n')
-        f.write(f'ARGS: {sys.argv}\n')
-        f.write(f'device in use: {device}\n')
-        f.write(f'--epochs {epochs}\n')
-        f.write(f'--seed {seed}\n')
-
-    # Setup data loaders and models.
-    #train_data, _ = gl_loaders(train_data_path, seed=seed)
-
-    if pos_neg_examples_file is None:
-        print('Calculating examples from scratch...')
-        pos_neg_examples = []
-        for anchor_language, _, _, _ in train_data:
-            pos_neg_examples.append(get_pos_neg_examples(anchor_language, language_train_data))
-        with open(f'{experiment_name}_train_examples.pkl', 'wb') as fout:
-            pickle.dump(pos_neg_examples, fout)
-    else:
-        print(f'Pulling examples from file {pos_neg_examples_file}...')
-        with open(pos_neg_examples_file, 'rb') as fin:
-            pos_neg_examples = pickle.load(fin)
-
-    language_model = RowNet(language_dim, embedded_dim=embedded_dim)
+    vision_dim = list(vision_train_data[0].size())[0]
     vision_model = RowNet(vision_dim, embedded_dim=embedded_dim)
+
     train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
 
-    # Finish model setup
-    # If we want to load pretrained models to continue training...
-    if os.path.exists(os.path.join(train_results_dir, 'model_A_state.pt')) and os.path.exists(os.path.join(train_results_dir, 'model_B_state.pt')):
+    if os.path.exists(os.path.join(train_results_dir, 'speech_model.pt')) and os.path.exists(os.path.join(train_results_dir, 'vision_model.pt')):
         print('Starting from pretrained networks.')
-        print(f'Loaded model_A_state.pt and model_B_state.pt from {train_results_dir}')
-        language_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_A_state.pt')))
-        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'model_B_state.pt')))
+        print(f'Loaded speech_model.pt and vision_model.pt from {train_results_dir}')
+        speech_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'speech_model.pt')))
+        vision_model.load_state_dict(torch.load(os.path.join(train_results_dir, 'vision_model.pt')))
     else:
-        print('Starting from scratch to train networks.')
+        print('Couldn\'t find models. Training from scratch...')
 
-    language_model.to(device)
+    speech_model.to(device)
     vision_model.to(device)
 
-    # Initialize the optimizers and loss function.
-    language_optimizer = torch.optim.Adam(language_model.parameters(), lr=0.001)
+    # TODO: does this need to change for the RNN?
+    speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=0.001)
     vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
 
-    lr_lambda = lambda epoch : 0.001 if epoch < int(epochs/3) else (0.0001 if epoch < int(epochs/3) * 2 else 0.00001)
-
-    language_scheduler = torch.optim.lr_scheduler.LambdaLR(language_optimizer, lr_lambda)
+    speech_scheduler = torch.optim.lr_scheduler.LambdaLR(speech_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
-
-    # Put models into training mode.
-    language_model.train()
+    sample_size = 0
+    speech_model.train()
     vision_model.train()
 
-    # Train.
-    # for saving to files
     batch_loss = []
     avg_epoch_loss = []
 
@@ -167,70 +156,87 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
         epoch_loss = 0.0
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             train_fout.write(f'{epoch},{step},')
-        #for i, (language, vision, object_name, instance_name, _) in enumerate(train_data):
-            language, vision, object_name, instance_name, _ = batch
+            speech, vision, object_name, instance_name, user_id = batch
             train_fout.write(f'{instance_name[0]},')
+
             indices = list(range(step * batch_size, min((step + 1) * batch_size, len(train_data))))
-            language_pos_examples, language_neg_examples, language_pos_instance, language_neg_instance = get_examples_batch(pos_neg_examples,indices,language_train_data, instance_names)
-            vision_pos_examples, vision_neg_examples, vision_pos_instance, vision_neg_instance = get_examples_batch(pos_neg_examples,indices,vision_train_data, instance_names)
-        #print(f'Training {i}...')
-            # Zero the parameter gradients.
-            language_optimizer.zero_grad()
+            speech_pos, speech_neg, speech_pos_instance, speech_neg_instance = get_examples_batch(pos_neg_examples, indices, speech_train_data, instance_names)
+            vision_pos, vision_neg, vision_pos_instance, vision_neg_instance = get_examples_batch(pos_neg_examples, indices, vision_train_data, instance_names)
+
+            speech_optimizer.zero_grad()
             vision_optimizer.zero_grad()
 
-            rand_int = random.randint(1, 8)
-            if rand_int == 1:
+            # TODO: still using triplet loss?
+            triplet_loss = torch.nn.TripletMarginLoss(margin=0.4, p=2)
+
+            # TODO: JANKY STUFF FOR TENSOR SIZING AND ORDER ERRORS
+            # this has to do with the batch_first param of the RNN
+
+            # TODO: If batching, need to pad step dim with 0s to
+            #   match the max step size
+
+            #print('SPEECH SIZES')
+            #print(speech.size())
+            #print(speech_pos.size())
+            #print(speech_neg.size())
+
+            #print('VISION SIZES')
+            #print(vision.size())
+            #print(vision_pos.size())
+            #print(vision_neg.size())
+
+            # Randomly choose triplet case
+            case = random.randint(1, 8)
+            if case == 1:
                 train_fout.write(f'{vision_pos_instance},{vision_neg_instance},vvv,')
                 target = vision_model(vision.to(device))
-                pos = vision_model(vision_pos_examples.to(device))
-                neg = vision_model(vision_neg_examples.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
                 marker = ["bbb"]
-            elif rand_int == 2:
-                train_fout.write(f'{language_pos_instance},{language_neg_instance},lll,')
-                target = language_model(language.to(device))
-                pos = language_model(language_pos_examples.to(device))
-                neg = language_model(language_neg_examples.to(device))
+            elif case == 2:
+                train_fout.write(f'{speech_pos_instance},{speech_neg_instance},sss,')
+                target = speech_model(speech.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
                 marker = ["aaa"]
-            elif rand_int == 3:
-                train_fout.write(f'{language_pos_instance},{language_neg_instance},vll')
+            elif case == 3:
+                train_fout.write(f'{speech_pos_instance},{speech_neg_instance},vss,')
                 target = vision_model(vision.to(device))
-                pos = language_model(language_pos_examples.to(device))
-                neg = language_model(language_neg_examples.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
                 marker = ["baa"]
-            elif rand_int == 4:
-                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},lvv')
-                target = language_model(language.to(device))
-                pos = vision_model(vision_pos_examples.to(device))
-                neg = vision_model(vision_neg_examples.to(device))
+            elif case == 4:
+                train_fout.write(f'{vision_pos_instance},{vision_neg_instance},svv,')
+                target = speech_model(speech.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
                 marker = ["abb"]
-            elif rand_int == 5:
-                train_fout.write(f'{vision_pos_instance},{language_neg_instance},vvl')
+            elif case == 5:
+                train_fout.write(f'{vision_pos_instance},{speech_neg_instance},vvs,')
                 target = vision_model(vision.to(device))
-                pos = vision_model(vision_pos_examples.to(device))
-                neg = language_model(language_neg_examples.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
                 marker = ["bba"]
-            elif rand_int == 6:
-                train_fout.write(f'{language_pos_instance},{vision_neg_instance},llv')
-                target = language_model(language.to(device))
-                pos = language_model(language_pos_examples.to(device))
-                neg = vision_model(vision_neg_examples.to(device))
+            elif case == 6:
+                train_fout.write(f'{speech_pos_instance},{vision_neg_instance},ssv,')
+                target = speech_model(speech.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
                 marker = ["aab"]
-            elif rand_int == 7:
-                train_fout.write(f'{language_pos_instance},{vision_neg_instance},vlv')
+            elif case == 7:
+                train_fout.write(f'{speech_pos_instance},{vision_neg_instance},vsv,')
                 target = vision_model(vision.to(device))
-                pos = language_model(language_pos_examples.to(device))
-                neg = vision_model(vision_neg_examples.to(device))
+                pos = speech_model(speech_pos.to(device))
+                neg = vision_model(vision_neg.to(device))
                 marker = ["bab"]
-            elif rand_int == 8:
-                train_fout.write(f'{vision_pos_instance},{language_neg_instance},lvl')
-                target = language_model(language.to(device))
-                pos = vision_model(vision_pos_examples.to(device))
-                neg = language_model(language_neg_examples.to(device))
+            elif case == 8:
+                train_fout.write(f'{vision_pos_instance},{speech_neg_instance},svs,')
+                target = speech_model(speech.to(device))
+                pos = vision_model(vision_pos.to(device))
+                neg = speech_model(speech_neg.to(device))
                 marker = ["aba"]
-
             loss = triplet_loss_cosine_abext_marker(target, pos, neg, marker, margin=0.4)
             # loss = triplet_loss(target, pos, neg)
-
             target = target.cpu().detach().numpy()
             pos = pos.cpu().detach().numpy()
             neg = neg.cpu().detach().numpy()
@@ -239,46 +245,26 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
             train_fout.write(f'{pos_dist},{neg_dist},{loss.item()}\n')
 
             loss.backward()
+            speech_optimizer.step()
             vision_optimizer.step()
-            language_optimizer.step()
 
-            # Forward.
-            #loss = triplet_loss_vanilla(
-            #    vision_data,
-            #    language_data,
-            #    negative,
-            #    language_model,
-            #    vision_model,
-            #    margin=margin
-            #)
-
-            #if procrustes > 0:
-            #    p_loss = procrustes_loss(anchor, positive, marker, language_model, vision_model)
-            #    loss += procrustes * p_loss
-            #    # mflow.log_metric(key='procurstes_loss', value=p_loss.item(), step=batch_num)
-
-            # Save batch loss.
             batch_loss.append(loss.item())
             epoch_loss += loss.item()
 
-            #reporting progress
             if not step % (len(train_data) // 32):
                 print(f'epoch: {epoch + 1}, batch: {step + 1}, loss: {loss.item()}')
 
-        # Save network state at each epoch.
-        torch.save(language_model.state_dict(), os.path.join(train_results_dir, 'model_A_state.pt'))
-        torch.save(vision_model.state_dict(), os.path.join(train_results_dir, 'model_B_state.pt'))
-
-        # average loss over the entire epoch
-        avg_epoch_loss.append(epoch_loss / len(train_data))
+        # Save networks after each epoch
+        torch.save(speech_model.state_dict(), os.path.join(train_results_dir, 'speech_model.pt'))
+        torch.save(vision_model.state_dict(), os.path.join(train_results_dir, 'vision_model.pt'))
 
         # Save loss data
-
-        with open(os.path.join(train_results_dir, 'epoch_loss.pkl'), 'wb') as fout:
-            pickle.dump(avg_epoch_loss, fout)
-
         with open(os.path.join(train_results_dir, 'batch_loss.pkl'), 'wb') as fout:
             pickle.dump(batch_loss, fout)
+
+        avg_epoch_loss.append(epoch_loss / len(train_data))
+        with open(os.path.join(train_results_dir, 'avg_epoch_loss.pkl'), 'wb') as fout:
+            pickle.dump(avg_epoch_loss, fout)
         print(f'Starting evaluation: {datetime.datetime.now().time()}')
 
         language2language_fout = open(os.path.join(results_dir, 'language2language_test_epoch_'+str(epoch)+'.txt'), 'w')
@@ -292,19 +278,19 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             language_data = language[0].to(device)
-            embedded_language = language_model(language_data).cpu().detach().numpy()
+            embedded_language = speech_model(language_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = speech_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
                 language2language_fout.write(f'{language[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = speech_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
                 language2language_fout.write(f'{language[1]},{neg_language[1]},n,{dist}\n')
         language2language_fout.close()
@@ -355,18 +341,17 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
             for i in positive_indices:
                 pos_language = language_test_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = speech_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
                 vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_test_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = speech_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
                 vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
         vision2language_fout.close()
-
 
         language2language_fout = open(os.path.join(results_dir, 'language2language_dev_epoch_'+str(epoch)+'.txt'), 'w')
         language2language_fout.write('instance_name_1,instance_name_2,p/n,embedded_distance\n')
@@ -379,19 +364,19 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
                 negative_indices = random.sample(negative_indices, min(len(negative_indices), sample_size))
 
             language_data = language[0].to(device)
-            embedded_language = language_model(language_data).cpu().detach().numpy()
+            embedded_language = speech_model(language_data).cpu().detach().numpy()
 
             for i in positive_indices:
                 pos_language = language_dev_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = speech_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_pos_language)
                 language2language_fout.write(f'{language[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_dev_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = speech_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_language, embedded_neg_language)
                 language2language_fout.write(f'{language[1]},{neg_language[1]},n,{dist}\n')
         language2language_fout.close()
@@ -442,45 +427,46 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
             for i in positive_indices:
                 pos_language = language_dev_data[i]
                 pos_language_data = pos_language[0].to(device)
-                embedded_pos_language = language_model(pos_language_data).cpu().detach().numpy()
+                embedded_pos_language = speech_model(pos_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_pos_language)
                 vision2language_fout.write(f'{vision[1]},{pos_language[1]},p,{dist}\n')
 
             for i in negative_indices:
                 neg_language = language_dev_data[i]
                 neg_language_data = neg_language[0].to(device)
-                embedded_neg_language = language_model(neg_language_data).cpu().detach().numpy()
+                embedded_neg_language = speech_model(neg_language_data).cpu().detach().numpy()
                 dist = scipy.spatial.distance.cosine(embedded_vision, embedded_neg_language)
                 vision2language_fout.write(f'{vision[1]},{neg_language[1]},n,{dist}\n')
         vision2language_fout.close()
-        # reporting results for this epoch
-        print('*********** epoch is finished ***********')
+
+        print('***** epoch is finished *****')
         print(f'epoch: {epoch + 1}, loss: {avg_epoch_loss[epoch]}')
 
-        # Update learning rate schedulers.
-        language_scheduler.step()
+        speech_scheduler.step()
         vision_scheduler.step()
 
-    print('Training Done!')
+    print('Training done!')
     train_fout.close()
 
 def main():
     ARGS, unused = parse_args()
     torch.manual_seed(ARGS.seed)
     random.seed(ARGS.seed)
-    np.random.seed(ARGS.seed)   
+    np.random.seed(ARGS.seed)
     train(
-        ARGS.experiment_name,
-        ARGS.epochs,
-        ARGS.train_data,
-        ARGS.dev_data,
-        ARGS.test_data,
-        ARGS.gpu_num,
+        experiment_name=ARGS.experiment,
+        epochs=ARGS.epochs,
+        train_data_path=ARGS.train_data,
+        dev_data_path=ARGS.dev_data,
+        test_data_path=ARGS.test_data,
         pos_neg_examples_file=ARGS.pos_neg_examples_file,
-        margin=0.4,
-        seed=ARGS.seed,
         batch_size=ARGS.batch_size,
-        embedded_dim=ARGS.embedded_dim
+        embedded_dim=ARGS.embedded_dim,
+        gpu_num=ARGS.gpu_num,
+        seed=ARGS.seed,
+        num_layers=ARGS.num_layers,
+        h=ARGS.h,
+        awe=ARGS.awe,
     )
 
 if __name__ == '__main__':
