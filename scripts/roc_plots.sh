@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")"
 models=( "vq-wav2vec" "decoar" "wav2vec2" "transcriptions" "w2v2transcriptions" "mfcc")
 cd ..
 for i in {0..5} ;
