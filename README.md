@@ -1,1 +1,1 @@
-# Practical Cross-modal Manifold Alignment for Robotic Grounded Language Learning - Applied to GoLD Dataset
+# Manifold Alignment for GoLD Dataset
