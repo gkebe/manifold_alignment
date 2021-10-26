@@ -49,6 +49,7 @@ For speech featurization,
 ```
 ## How to use
 ### 1. Featurization
+
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
