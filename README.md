@@ -50,8 +50,8 @@ For speech featurization,
 ## How to use
 ### 1. Featurization
 ### 2. Preprocessing
-### 1. Training
-### 1. Evaluation
+### 3. Training
+### 4. Evaluation
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
