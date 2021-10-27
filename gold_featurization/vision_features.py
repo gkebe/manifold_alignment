@@ -48,7 +48,7 @@ def parse_args():
 
 ARGS, unused = parse_args()
 
-dataset = GLD_Dataset("gold/speech.tsv", "images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
+dataset = GLD_Dataset("gold/speech.tsv", "gold/images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
 #dataloader = torch.utils.data.DataLoader(dataset,batch_size=1,shuffle=False,num_workers=4)
 print(len(dataset))
 
