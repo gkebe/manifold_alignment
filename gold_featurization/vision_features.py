@@ -13,7 +13,7 @@ import flair
 import skimage
 import sys
 sys.path.append('../')
-from dataset import GLD_Dataset
+from datasets import GLD_Dataset
 import pickle
 import argparse
 
