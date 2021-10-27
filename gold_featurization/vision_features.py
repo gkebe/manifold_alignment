@@ -71,13 +71,12 @@ object_names = []
 instance_names = []
 file_names = []
 for i in tqdm(range(0, len(dataset)), desc="Instance"):
-    if dataset[i][4] not in instance_names:
+    if dataset[i][5] not in file_names:
         vision_data.append(vision_model(dataset[i][1].unsqueeze_(0).to(device)).detach().to('cpu'))
         depth_data.append(vision_model(dataset[i][2].unsqueeze_(0).to(device)).detach().to('cpu'))
         object_names.append(dataset[i][3])
         instance_names.append(dataset[i][4])
         file_names.append(dataset[i][5])
-
 if ARGS.no_depth:
     vision_data_ = vision_data
 else:
