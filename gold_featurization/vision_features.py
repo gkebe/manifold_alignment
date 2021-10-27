@@ -15,6 +15,10 @@ from dataset import GLD_Dataset
 import pickle
 import argparse
 
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 def setup_device(gpu_num=0):
     """Setup device."""
     device_name = 'cuda:'+str(gpu_num) if torch.cuda.is_available() else 'cpu'  # Is there a GPU? 
