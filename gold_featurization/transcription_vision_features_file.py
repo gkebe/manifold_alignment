@@ -12,6 +12,7 @@ import torch
 import flair
 import skimage
 import pickle
+sys.path.append('../')
 from dataset import GLD_Instances
 normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 resize = torchvision.transforms.Resize((224,224))
@@ -29,7 +30,7 @@ transform_depth = torchvision.transforms.Compose([
                                                 torchvision.transforms.ToTensor(),
                                                 normalize])
 
-dataset = GLD_Instances("speech.tsv", "images",transcriptions=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
+dataset = GLD_Instances("gold/speech.tsv", "images",transcriptions=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
 
 #dataloader = torch.utils.data.DataLoader(dataset,batch_size=1,shuffle=False,num_workers=4)
 print(len(dataset))
@@ -68,5 +69,5 @@ data = {'language_data':language_data,
         'image_names':image_names
        }
 
-with open('features/gld_transcriptions_vision_tensors.pkl', 'wb') as f:
+with open('../data/gld_transcriptions_vision_tensors.pkl', 'wb') as f:
     pickle.dump(data, f)

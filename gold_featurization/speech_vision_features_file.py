@@ -11,6 +11,7 @@ import torchvision
 import torch
 import flair
 import skimage
+sys.path.append('../')
 from dataset import GLD_Instances
 import pickle
 import argparse
@@ -32,7 +33,7 @@ transform_depth = torchvision.transforms.Compose([
                                                 torchvision.transforms.ToTensor(),
                                                 normalize])
 
-dataset = GLD_Instances("speech.tsv", "images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
+dataset = GLD_Instances("gold/speech.tsv", "images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
 #dataloader = torch.utils.data.DataLoader(dataset,batch_size=1,shuffle=False,num_workers=4)
 
 def parse_args():
@@ -72,5 +73,5 @@ data = {'language_data':language_data,
        }
 
 import pickle
-with open('features/gld_'+ARGS.features.replace("_features.pkl", "")+'_vision_tensors.pkl', 'wb') as f:
+with open('../data/gld_'+ARGS.features.replace("_features.pkl", "")+'_vision_tensors.pkl', 'wb') as f:
     pickle.dump(data, f)

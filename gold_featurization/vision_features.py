@@ -11,6 +11,7 @@ import torchvision
 import torch
 import flair
 import skimage
+sys.path.append('../')
 from dataset import GLD_Dataset
 import pickle
 import argparse
@@ -36,8 +37,15 @@ transform_depth = torchvision.transforms.Compose([
                                                 resize,
                                                 torchvision.transforms.ToTensor(),
                                                 normalize])
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no_depth', dest='no_dpeth', action='store_true',
+                        help="extract RGB features only.")
+    return parser.parse_known_args()
 
-dataset = GLD_Dataset("speech.tsv", "images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
+ARGS, unused = parse_args()
+
+dataset = GLD_Dataset("gold/speech.tsv", "images",speech=True,transform_rgb=transform_rgbd,transform_depth=transform_depth)
 #dataloader = torch.utils.data.DataLoader(dataset,batch_size=1,shuffle=False,num_workers=4)
 print(len(dataset))
 
@@ -66,7 +74,10 @@ for i in tqdm(range(0, len(dataset)), desc="Instance"):
         object_names.append(dataset[i][3])
         instance_names.append(dataset[i][4])
         file_names.append(dataset[i][5])
-vision_data_ = np.concatenate((np.squeeze([i.numpy() for i in depth_data]),np.squeeze([i.numpy() for i in vision_data])),axis=1)
+if ARGS.no_depth:
+    vision_data_ = vision_data
+else:
+    vision_data_ = np.concatenate((np.squeeze([i.numpy() for i in depth_data]),np.squeeze([i.numpy() for i in vision_data])),axis=1)
 vision_data__ = [torch.tensor(i) for i in vision_data_]
 data = dict()
 for i in range(len(instance_names)):
