@@ -12,6 +12,7 @@ import torch
 import flair
 import skimage
 import pickle
+import sys
 sys.path.append('../')
 from dataset import GLD_Instances
 def setup_device(gpu_num=0):

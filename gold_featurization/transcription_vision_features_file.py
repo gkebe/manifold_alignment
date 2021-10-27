@@ -12,6 +12,7 @@ import torch
 import flair
 import skimage
 import pickle
+import sys
 sys.path.append('../')
 from dataset import GLD_Instances
 normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
