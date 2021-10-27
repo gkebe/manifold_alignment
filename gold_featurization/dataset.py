@@ -126,7 +126,7 @@ class GLD_Instances(Dataset):
 
 
 def main():
-    dataset = GLD_Dataset("text.tsv", "images", False, False)
+    dataset = GLD_Dataset("text.tsv", "gold/images", False, False)
     print(dataset[1027])
     print(len(dataset))
 
