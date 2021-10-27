@@ -12,9 +12,7 @@ import torch
 import flair
 import skimage
 import pickle
-import sys
-sys.path.append('../')
-from datasets import GLD_Instances
+from dataset import GLD_Instances
 normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 resize = torchvision.transforms.Resize((224,224))
 transform_rgbd = torchvision.transforms.Compose([

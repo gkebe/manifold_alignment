@@ -11,8 +11,6 @@ import torchvision
 import torch
 import flair
 import skimage
-import sys
-sys.path.append('../')
 from dataset import GLD_Instances
 import pickle
 import argparse
