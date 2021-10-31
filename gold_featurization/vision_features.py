@@ -77,7 +77,7 @@ for i in tqdm(range(0, len(v_data[0])), desc="Instance"):
      if not ARGS.no_depth:
         depth_data.append(vision_model(v_data[1][i].unsqueeze_(0).to(device)).detach().to('cpu'))
 if ARGS.no_depth:
-    vision_data_ = vision_data
+    vision_data_ = np.squeeze([i.numpy() for i in vision_data])
 else:
     vision_data_ = np.concatenate((np.squeeze([i.numpy() for i in depth_data]),np.squeeze([i.numpy() for i in vision_data])),axis=1)
 vision_data__ = [torch.tensor(i) for i in vision_data_]

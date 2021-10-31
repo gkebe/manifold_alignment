@@ -46,14 +46,6 @@ def parse_args():
 
     return parser.parse_known_args()
 
-def lr_lambda(e):
-    if e < 100:
-        return 0.001
-    elif e < 200:
-        return 0.0001
-    else:
-        return 0.00001
-
 #def lr_lambda(epoch):
 #    return .95 ** epoch
 
@@ -141,6 +133,8 @@ def train(experiment_name, epochs, train_data_path, dev_data_path, test_data_pat
     # TODO: does this need to change for the RNN?
     speech_optimizer = torch.optim.Adam(speech_model.parameters(), lr=0.001)
     vision_optimizer = torch.optim.Adam(vision_model.parameters(), lr=0.001)
+
+    lr_lambda = lambda epoch: 0.001 if epoch < int(epochs / 3) else (0.0001 if epoch < int(epochs / 3) * 2 else 0.00001)
 
     speech_scheduler = torch.optim.lr_scheduler.LambdaLR(speech_optimizer, lr_lambda)
     vision_scheduler = torch.optim.lr_scheduler.LambdaLR(vision_optimizer, lr_lambda)
