@@ -70,13 +70,12 @@ depth_data = []
 object_names = []
 instance_names = []
 file_names = []
-for i in tqdm(range(0, len(dataset)), desc="Instance"):
-    if dataset[i][5] not in file_names:
-        vision_data.append(vision_model(dataset[i][1].unsqueeze_(0).to(device)).detach().to('cpu'))
-        depth_data.append(vision_model(dataset[i][2].unsqueeze_(0).to(device)).detach().to('cpu'))
-        object_names.append(dataset[i][3])
-        instance_names.append(dataset[i][4])
-        file_names.append(dataset[i][5])
+
+data = dataset.getVisionData(ARGS.no_depth)
+for i in tqdm(range(0, len(data[0])), desc="Instance"):
+     vision_data.append(vision_model(dataset[0][i].unsqueeze_(0).to(device)).detach().to('cpu'))
+     if not ARGS.no_depth:
+        depth_data.append(vision_model(dataset[1][i].unsqueeze_(0).to(device)).detach().to('cpu'))
 if ARGS.no_depth:
     vision_data_ = vision_data
 else:
