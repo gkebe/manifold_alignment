@@ -5,8 +5,10 @@ import random
 import scipy
 import scipy.spatial
 import torch
+from os.path import dirname, abspath
+d = dirname(dirname(abspath(__file__)))
 import sys
-sys.path.append('..')
+sys.path.append(d)
 from datasets import GLData
 
 def parse_args():
