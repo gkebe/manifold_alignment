@@ -74,7 +74,7 @@ class GLD_Dataset(Dataset):
             io.imread(self.root_dir + "/color/" + object_names[i] + "/" + instance_names[i] + "/" + filenames[i]
                       , as_gray=False)) for i in range(len(filenames))]  # cv2.imread(rgb_image_loc)
         if no_depth:
-           return rgb_images
+           return rgb_images, None, filenames
         depth_images = [self.transform_depth(io.imread(self.root_dir + "/depth/" + object_names[i] + "/" + instance_names[i] + "/" + filenames[i]
                                   , as_gray=True)) for i in range(len(filenames))]#cv2.imread(depth_image_loc, cv2.IMREAD_GRAYSCALE)
         return rgb_images, depth_images, filenames
