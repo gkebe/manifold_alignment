@@ -6,8 +6,9 @@ import scipy
 import scipy.spatial
 import torch
 import numpy as np
-
-from manifold_alignment.datasets import GLData
+import sys
+sys.path.append('..')
+from datasets import GLData
 
 def parse_args():
     parser = argparse.ArgumentParser()
