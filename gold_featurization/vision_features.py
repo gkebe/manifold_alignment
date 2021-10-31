@@ -42,7 +42,7 @@ transform_depth = torchvision.transforms.Compose([
                                                 normalize])
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--no_depth', dest='no_dpeth', action='store_true',
+    parser.add_argument('--no_depth', dest='no_depth', action='store_true',
                         help="extract RGB features only.")
     return parser.parse_known_args()
 
