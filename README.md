@@ -49,14 +49,26 @@ For speech featurization,
 ```
 ## How to use
 ### 1. Featurization
+Clone or symlink the gold repository into the gold_featurization directory:
 ```
 cd gold_featurization
+git clone https://github.com/iral-lab/gold.git
 ```
-cp or ln -s [gold](https://github.com/iral-lab/gold/) into this folder
+Featurize the GoLD RGB and depth images:
 ```
 python vision_features.py
-python text_vision_features_file.py
 ```
+Featurize the GoLD language descriptions and pair them with the appropriate vision features. The resulting tensors are saved in the data folder.
+```
+mkdir ../data
+#text
+python text_vision_features_file.py
+#transcriptions
+python transcription_vision_features_file.py
+#speech
+python speech_vision_features_file.py --features 'speech_features_dictionary'
+```
+
 ### 2. Preprocessing
 ### 3. Training
 ### 4. Evaluation
