@@ -49,6 +49,12 @@ For speech featurization,
 ```
 ## How to use
 ### 1. Featurization
+```
+cd gold_featurization
+cp or ln -s [gold](https://github.com/iral-lab/gold/edit/main/README.md) into this folder
+python vision_features.py
+python text_vision_features_file.py
+```
 ### 2. Preprocessing
 ### 3. Training
 ### 4. Evaluation
