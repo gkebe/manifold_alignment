@@ -58,7 +58,7 @@ Featurize the GoLD RGB and depth images:
 ```
 python vision_features.py
 ```
-Featurize the GoLD language descriptions and pair them with the appropriate vision features. The resulting tensors are saved in the data folder as gld_*language_modality*_vision_tensors.pkl (e.g. gld_transcriptions_vision_tensors.pkl)
+Featurize the GoLD language descriptions and pair them with the appropriate vision features. The resulting tensors are saved in the data folder as gld_*<language_modality>*_vision_tensors.pkl (e.g. gld_transcriptions_vision_tensors.pkl)
 ```
 mkdir ../data
 #text
@@ -66,13 +66,13 @@ python text_vision_features_file.py
 #transcriptions
 python transcription_vision_features_file.py
 #speech
-python speech_vision_features_file.py --features 'speech_features_dictionary'
+python speech_vision_features_file.py --features <speech_features_dictionary>
 ```
 
 ### 2. Preprocessing
-Splits gld_*language_modality*_vision_tensors.pkl into train, val and test splits and generate positive and negative examples for each data instance.
+Splits gld_*<language_modality>*_vision_tensors.pkl into train, val and test splits and generate positive and negative examples for each data instance.
 ```
-bash scripts/preprocess_data.sh 'language_modality'
+bash scripts/preprocess_data.sh <language_modality>
 ```
 ### 3. Training
 
