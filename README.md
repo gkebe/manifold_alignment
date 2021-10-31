@@ -20,7 +20,7 @@ of real-world items." [[1]](#1).
 
 "The **G**r**o**unded **L**anguage **D**ataset, or GoLD is a collection of visual and English natural language data in five high-level groupings: food, home, medical, office, and tools. In these groups, 47 object classes contain 207 individual object instances. The dataset contains vision and depth images of each object from 450 different rotational views. From these, four representative ‘keyframe’ images were selected. These representative images were used to collect 16500 textual and 16500 spoken descriptions." [[2]](#2)
 
-The dataset is available [here](https://github.com/iral-lab/gold/edit/main/README.md).
+The dataset is available [here](https://github.com/iral-lab/gold/).
 
 ## Requirements
 ```
@@ -49,6 +49,26 @@ For speech featurization,
 ```
 ## How to use
 ### 1. Featurization
+Clone or symlink the gold repository into the gold_featurization directory:
+```
+cd gold_featurization
+git clone https://github.com/iral-lab/gold.git
+```
+Featurize the GoLD RGB and depth images:
+```
+python vision_features.py
+```
+Featurize the GoLD language descriptions and pair them with the appropriate vision features. The resulting tensors are saved in the data folder.
+```
+mkdir ../data
+#text
+python text_vision_features_file.py
+#transcriptions
+python transcription_vision_features_file.py
+#speech
+python speech_vision_features_file.py --features 'speech_features_dictionary'
+```
+
 ### 2. Preprocessing
 ### 3. Training
 ### 4. Evaluation
