@@ -65,9 +65,10 @@ class GLD_Dataset(Dataset):
         return len(self.images)
 
     def getVisionData(self, no_depth):
+
         filenames = list(set([i+".png" for i in self.images]))
-        object_names = list(set([self.getObjectName(i) for i in filenames]))
-        instance_names = list(set([self.getInstanceName(i) for i in filenames]))
+        object_names = [self.getObjectName(i) for i in filenames]
+        instance_names = [self.getInstanceName(i) for i in filenames]
 
         rgb_images = [self.transform_rgb(
             io.imread(self.root_dir + "/color/" + object_names[i] + "/" + instance_names[i] + "/" + filenames[i]
@@ -76,7 +77,7 @@ class GLD_Dataset(Dataset):
            return rgb_images
         depth_images = [self.transform_depth(io.imread(self.root_dir + "/depth/" + object_names[i] + "/" + instance_names[i] + "/" + filenames[i]
                                   , as_gray=True)) for i in range(len(filenames))]#cv2.imread(depth_image_loc, cv2.IMREAD_GRAYSCALE)
-        return rgb_images, depth_images
+        return rgb_images, depth_images, filenames
     def getObjectName(self,picture_name):
         pattern = "([a-z].*[a-z])_\d+"
         return re.search(pattern,picture_name).group(1)

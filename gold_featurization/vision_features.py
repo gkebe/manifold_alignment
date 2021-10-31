@@ -65,24 +65,24 @@ vision_model.fc = Identity()
 vision_model.to(device)
 vision_model.eval()
 
+
+v_data = dataset.getVisionData(ARGS.no_depth)
+
 vision_data = []
 depth_data = []
-object_names = []
-instance_names = []
-file_names = []
+file_names = v_data[2]
 
-data = dataset.getVisionData(ARGS.no_depth)
-for i in tqdm(range(0, len(data[0])), desc="Instance"):
-     vision_data.append(vision_model(dataset[0][i].unsqueeze_(0).to(device)).detach().to('cpu'))
+for i in tqdm(range(0, len(v_data[0])), desc="Instance"):
+     vision_data.append(vision_model(v_data[0][i].unsqueeze_(0).to(device)).detach().to('cpu'))
      if not ARGS.no_depth:
-        depth_data.append(vision_model(dataset[1][i].unsqueeze_(0).to(device)).detach().to('cpu'))
+        depth_data.append(vision_model(v_data[1][i].unsqueeze_(0).to(device)).detach().to('cpu'))
 if ARGS.no_depth:
     vision_data_ = vision_data
 else:
     vision_data_ = np.concatenate((np.squeeze([i.numpy() for i in depth_data]),np.squeeze([i.numpy() for i in vision_data])),axis=1)
 vision_data__ = [torch.tensor(i) for i in vision_data_]
 data = dict()
-for i in range(len(instance_names)):
+for i in range(len(file_names)):
     data[file_names[i]] = vision_data__[i]
 print(len(data))
 import pickle
