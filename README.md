@@ -75,8 +75,11 @@ Splits gld_*<language_modality>*_vision_tensors.pkl into train, val and test spl
 bash scripts/preprocess_data.sh <language_modality>
 ```
 ### 3. Training
-
+```
+bash scripts/train.sh <language_modality> <num_epochs> <seed> <num_gpu>
+```
 ### 4. Evaluation
+
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
