@@ -76,7 +76,7 @@ def main():
     #l2l_out = os.path.join(results_dir, 'l2l.png')
     #v2v = os.path.join(results_dir, 'vision2vision.txt')
     #v2v_out = os.path.join(results_dir, 'v2v.png')
-    v2l = os.path.join(results_dir, f'vision2language_{split}_epoch_{epoch}.txt')
+    v2l = os.path.join(results_dir, f'vision2language_{split}_epoch_{ARGS.epoch}.txt')
     v2l_out = os.path.join(results_dir, f'{ARGS.experiment}_p_r_f1.pkl')
 
     #create_plot(l2l, l2l_out, 'Language to Language Embedded Cosine Distance')
