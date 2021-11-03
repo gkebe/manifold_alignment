@@ -67,8 +67,8 @@ def create_plot(n, file_path, fout, title):
 
 def main():
     ARGS, unused = parse_args()
-
-    results_dir = f'../output/{ARGS.experiment}'
+    dirname = os.path.dirname(__file__)
+    results_dir = os.path.join(dirname, f'../output/{ARGS.experiment}')
     split = "dev"
     if ARGS.test:
         split = "test"
