@@ -45,7 +45,8 @@ def evaluate(experiment_name, test_data_path, pos_neg_examples_file, gpu_num, em
     # Eitel dimension
     vision_dim = list(vision_test_data[0][0].size())[0]
 
-    results_dir = f'./output/{experiment_name}'
+    dirname = os.path.dirname(__file__)
+    results_dir = os.path.join(dirname, f'./output/{experiment_name}')
     train_results_dir = os.path.join(results_dir, 'train_results/')
     v2l = os.path.join(results_dir, f'vision2language_test_epoch_{epoch}.txt')
     y_true = []
