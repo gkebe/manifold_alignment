@@ -21,12 +21,12 @@ def parse_args():
 ARGS, unused = parse_args()
 
 if ARGS.model == "wav2vec2":
-    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
-    model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h").cuda()
+    tokenizer = Wav2Vec2Tokenizer.from_pretrained("facebook/wav2vec2-base-960h")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h").cuda()
 
 elif ARGS.model == "wavlm":
-    processor = Wav2Vec2Processor.from_pretrained("patrickvonplaten/wavlm-libri-clean-100h-base-plus")
-    model = WavLMModel.from_pretrained("patrickvonplaten/wavlm-libri-clean-100h-base-plus").cuda()
+    tokenizer = Wav2Vec2Processor.from_pretrained("patrickvonplaten/wavlm-libri-clean-100h-base-plus")
+    model = WavLMForCTC.from_pretrained("patrickvonplaten/wavlm-libri-clean-100h-base-plus").cuda()
 
 model.eval()
 data_path = ARGS.speech_dir
