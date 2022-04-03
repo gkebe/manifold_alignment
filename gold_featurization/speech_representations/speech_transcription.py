@@ -6,7 +6,7 @@ import pickle
 import torch
 import torchaudio
 from tqdm import tqdm
-from transformers import Wav2Vec2Tokenizer, Wav2Vec2ForCTC
+from transformers import Wav2Vec2Tokenizer, Wav2Vec2ForCTC, Wav2Vec2Processor
 
 import soundfile as sf
 
