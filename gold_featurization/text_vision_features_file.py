@@ -77,5 +77,5 @@ data = {'language_data':language_data,
        }
 
 
-with open('..data/gld_text_vision_tensors.pkl', 'wb') as f:
+with open('../data/gld_text_vision_tensors.pkl', 'wb') as f:
     pickle.dump(data, f)
