@@ -61,10 +61,13 @@ python vision_features.py
 Featurize the GoLD language descriptions and pair them with the appropriate vision features. The resulting tensors are saved in the data folder as gld_*<language_modality>*_vision_tensors.pkl (e.g. gld_transcriptions_vision_tensors.pkl)
 ```
 mkdir ../data
+
 #text
 python text_vision_features_file.py
+
 #transcriptions
 python transcription_vision_features_file.py
+
 #speech
 #downsample the speech to 16k first
 python downsample.py --speech_dir <gold_speech_directory> --output_dir <downsampled_speech_directory>
