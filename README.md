@@ -66,6 +66,9 @@ python text_vision_features_file.py
 #transcriptions
 python transcription_vision_features_file.py
 #speech
+#downsample the speech to 16k first
+python downsample.py --speech_dir <gold_speech_directory> --output_dir <downsampled_speech_directory>
+python speech_representations/speech_featurization.py --model <"wav2vec2" or "wavlm"> --speech_dir <downsampled_speech_directory> --output <speech_features_dictionary>
 python speech_vision_features_file.py --features <speech_features_dictionary>
 ```
 
