@@ -2,6 +2,8 @@ import librosa
 import soundfile as sf
 import os
 from tqdm import tqdm
+import argparse
+
 sr = 16000
 
 def parse_args():
@@ -11,7 +13,7 @@ def parse_args():
 
     return parser.parse_known_args()
 
-ARGS, unused = parse_args()
+args, unused = parse_args()
 
 directory = args.speech_dir
 output_dir = args.output_dir
