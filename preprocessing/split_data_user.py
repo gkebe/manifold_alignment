@@ -86,12 +86,14 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None):
     train['object_names'] = [data['object_names'][i] for i in train_indices]
     train['instance_names'] = [data['instance_names'][i] for i in train_indices]
     train['image_names'] = [data['image_names'][i] for i in train_indices]
+    train['user_ids'] = [data['user_ids'][i] for i in train_indices]
 
     test['language_data'] = [data['language_data'][i] for i in test_indices]
     test['vision_data'] = [data['vision_data'][i] for i in test_indices]
     test['object_names'] = [data['object_names'][i] for i in test_indices]
     test['instance_names'] = [data['instance_names'][i] for i in test_indices]
     test['image_names'] = [data['image_names'][i] for i in test_indices]
+    test['user_ids'] = [data['user_ids'][i] for i in test_indices]
 
     return train, test
 

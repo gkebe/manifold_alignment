@@ -86,6 +86,13 @@ bash scripts/train.sh <language_modality> <num_epochs> <seed> <num_gpu>
 ```
 ### 4. Evaluation
 
+### 5. User Trait-based Analysis
+```
+mkdir data/users
+mkdir data/group
+bash scripts/preprocess_user.sh <language_modality>
+bash scripts/train.sh <language_modality> <num_epochs> <seed> <num_gpu>
+```
 ## References
 <a id="1">[1]</a> 
 Nguyen et al. (2021). 
