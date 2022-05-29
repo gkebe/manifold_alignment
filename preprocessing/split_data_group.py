@@ -69,12 +69,14 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None, limit=None):
     train_images = []
     unique_object_names = list(OrderedSet(data['object_names']))
     unique_image_names = list(OrderedSet([(data['image_names'][i], data['object_names'][i]) for i in range(len(data['image_names']))]))
+    user_count = Counter(data['object_names'])
 
     for object_name in unique_object_names:
-        train_images += random.sample(
-            [i[0] for i in unique_image_names if object_name== i[1]],
-            int(train_percentage * [i[1] for i in unique_image_names].count(object_name))
-        )
+        if user_count[object_name] > 1:
+            train_images += random.sample(
+                [i[0] for i in unique_image_names if object_name== i[1]],
+                int(train_percentage * [i[1] for i in unique_image_names].count(object_name))
+            )
 
 
     #for object_name in unique_object_names:
