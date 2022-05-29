@@ -10,6 +10,8 @@ import skimage
 import pickle
 import argparse
 import pandas as pd
+import os
+import sys
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -21,7 +23,7 @@ def parse_args():
 ARGS, unused = parse_args()
 
 
-with open("gold/speakers.tsv",'rb') as csv_file:
+with open(f"{os.path.realpath(sys.path[0])}/gold/speakers.tsv",'rb') as csv_file:
      speakers = pd.read_csv(csv_file, delimiter="\t", keep_default_na=False, na_values=['_'])
 if not ARGS.trait:
     for trait in speakers.keys():
