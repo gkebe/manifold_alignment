@@ -88,8 +88,6 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None, limit=None):
     #    )
     train_indices = [i for i in range(len(data['object_names'])) if data['image_names'][i] in train_images and user_count[data['object_names'][i]] > 1]
     test_indices = [i for i in range(len(data['object_names'])) if i not in train_indices and user_count[data['object_names'][i]] > 1]
-    print(len(train_indices))
-    print(len(test_indices))
 
     if limit != None:
         train_indices = random.sample(train_indices, int(limit[0]))
