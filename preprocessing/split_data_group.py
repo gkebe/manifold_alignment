@@ -27,10 +27,8 @@ def gl_dataset(data_location, train_percentage=0.8, seed=None, user_ids=None, li
     if user_ids is not None:
         print(len(user_ids))
         print(user_ids)
-        print(len(data["user_ids"]))
-        print(set(data["user_ids"]))
-        data_indicies = [i for i in range(len(data["user_ids"]))]
-        print(len(data_indicies))
+        data_indicies = [i for i in range(len(data["user_ids"])) if data["user_ids"][i] in user_ids]
+
         data['language_data'] = [data['language_data'][i] for i in data_indicies]
         data['vision_data'] = [data['vision_data'][i] for i in data_indicies]
         data['object_names'] = [data['object_names'][i] for i in data_indicies]
