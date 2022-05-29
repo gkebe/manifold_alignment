@@ -62,7 +62,7 @@ for i in tqdm(range(0, len(dataset)), desc="Instance"):
     instance_names.append(dataset[i][4])
     user_ids.append(dataset[i][6])
     image_names.append(dataset[i][7])
-
+print(len(user_ids))
 data = {'language_data':language_data,
         'vision_data':vision_data,
         'object_names':object_names,
