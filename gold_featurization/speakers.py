@@ -44,8 +44,8 @@ else:
             print(list(speakers[speakers[trait] == val]["worker_id"]))
             print()
     else:
-        val = ARGS.val
-        print('[%s]' % ','.join(map(str, list(speakers[speakers[trait] == val]["worker_id"]))))
+        val = ARGS.val.split(",")
+        print('[%s]' % ','.join(map(str, list(speakers[speakers[trait].isin(val)]["worker_id"]))))
 """
 \with open("gld_vision_features.pkl",'rb') as f:
     vision_features = pickle.load(f, encoding='bytes')
