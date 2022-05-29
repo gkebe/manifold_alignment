@@ -26,6 +26,7 @@ def gl_dataset(data_location, train_percentage=0.8, seed=None, user_ids=None, li
     # make per user splits
     if user_ids is not None:
         print(len(user_ids))
+        print(data["user_ids"][i])
         data_indicies = [i for i in range(len(data["user_ids"])) if data["user_ids"][i] in user_ids]
         print(len(data_indicies))
         data['language_data'] = [data['language_data'][i] for i in data_indicies]
