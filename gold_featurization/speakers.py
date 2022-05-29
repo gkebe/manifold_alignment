@@ -45,7 +45,7 @@ else:
             print()
     else:
         val = ARGS.val.split(",")
-        val = [int(i) if i.is_numeric() else i for i in val]
+        val = [int(i) if i.isnumeric() else i for i in val]
         print('[%s]' % ','.join(map(str, list(speakers[speakers[trait].isin(val)]["worker_id"]))))
 """
 \with open("gld_vision_features.pkl",'rb') as f:
