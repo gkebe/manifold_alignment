@@ -130,6 +130,7 @@ class GLData(Dataset):
         return item
 
 def main():
+    print("3"*100)
     ARGS, unused = parse_args()
 
     with open(ARGS.data, 'rb') as fin:
