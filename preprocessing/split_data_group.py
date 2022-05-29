@@ -142,7 +142,6 @@ def main():
         users = ARGS.users
         users = users.strip('[]').split(",")
 
-    print(users)
     if ARGS.train_limit is None:
         limit = None
     else:
