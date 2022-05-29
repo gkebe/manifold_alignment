@@ -27,7 +27,7 @@ def gl_dataset(data_location, train_percentage=0.8, seed=None, user_ids=None, li
     if user_ids is not None:
         print(len(user_ids))
         print(user_ids)
-        print(len(ata["user_ids"]))
+        print(len(data["user_ids"]))
         print(set(data["user_ids"]))
         data_indicies = [i for i in range(len(data["user_ids"]))]
         print(len(data_indicies))
