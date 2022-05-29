@@ -10,28 +10,40 @@ import skimage
 import pickle
 import argparse
 import pandas as pd
-"""
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--features', default='wav2vec_features.pkl', help='speech features file')
+    parser.add_argument('--trait', default=None)
+    parser.add_argument('--val', default=None)
 
     return parser.parse_known_args()
 
 ARGS, unused = parse_args()
-"""
+
 
 with open("gold/speakers.tsv",'rb') as csv_file:
      speakers = pd.read_csv(csv_file, delimiter="\t", keep_default_na=False, na_values=['_'])
-for trait in speakers.keys():
-    print(f"{trait}:")
-    if trait in ["worker_id", "num_examples"]:
-        continue
-    for val in list(set(speakers[trait])):
-        print(f"{val}: {len(speakers[speakers[trait] == val])}")
-        print(list(speakers[speakers[trait] == val]["worker_id"]))
+if not ARGS.trait:
+    for trait in speakers.keys():
+        print(f"{trait}:")
+        if trait in ["worker_id", "num_examples"]:
+            continue
+        for val in list(set(speakers[trait])):
+            print(f"{val}: {len(speakers[speakers[trait] == val])}")
+            print(list(speakers[speakers[trait] == val]["worker_id"]))
+            print()
         print()
-    print()
-
+else:
+    trait = ARGS.trait
+    if not ARGS.val:
+        print(f"{trait}:")
+        for val in list(set(speakers[trait])):
+            print(f"{val}: {len(speakers[speakers[trait] == val])}")
+            print(list(speakers[speakers[trait] == val]["worker_id"]))
+            print()
+    else:
+        val = ARGS.val
+        print(list(speakers[speakers[trait] == val]["worker_id"]))
 """
 \with open("gld_vision_features.pkl",'rb') as f:
     vision_features = pickle.load(f, encoding='bytes')
