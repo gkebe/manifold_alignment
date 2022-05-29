@@ -85,14 +85,14 @@ python generate_negatives.py --data_file=data/groups/gld_${1}_highvolume_vision_
 python generate_negatives.py --data_file=data/groups/gld_${1}_highvolume_vision_test.pkl --out_file=data/groups/gld_${1}_highvolume_vision_test_pos_neg.pkl
 
 
-python split_data_pre_loader_group.py --data=data/gld_${1}_vision_tensors.pkl --train=data/groups/gld_${1}_mediumvolume_vision_train.pkl --train_limit=316 --test_limit=109 --test=data/groups/gld_${1}_lowvolume_vision_test.pkl --users $LOWVOLUME_USER_IDS >> data/groups/lowvolume.txt
+python ./preprocessing/split_data_group.py --data=data/gld_${1}_vision_tensors.pkl --train=data/groups/gld_${1}_mediumvolume_vision_train.pkl --train_limit=316 --test_limit=109 --test=data/groups/gld_${1}_lowvolume_vision_test.pkl --users $LOWVOLUME_USER_IDS >> data/groups/lowvolume.txt
 
 python generate_negatives.py --data_file=data/groups/gld_${1}_lowvolume_vision_train.pkl --out_file=data/groups/gld_${1}_lowvolume_vision_train_pos_neg.pkl
 
 python generate_negatives.py --data_file=data/groups/gld_${1}_lowvolume_vision_test.pkl --out_file=data/groups/gld_${1}_lowvolume_vision_test_pos_neg.pkl
 
 
-python split_data_pre_loader_group.py --data=data/gld_${1}_vision_tensors.pkl --train=data/groups/gld_${1}_lowvolume_vision_train.pkl --train_limit=316 --test_limit=109 --test=data/groups/gld_${1}_mediumvolume_vision_test.pkl --users $MEDIUMVOLUME_USER_IDS >> data/groups/mediumvolume.txt
+python ./preprocessing/split_data_group.py --data=data/gld_${1}_vision_tensors.pkl --train=data/groups/gld_${1}_lowvolume_vision_train.pkl --train_limit=316 --test_limit=109 --test=data/groups/gld_${1}_mediumvolume_vision_test.pkl --users $MEDIUMVOLUME_USER_IDS >> data/groups/mediumvolume.txt
 
 python generate_negatives.py --data_file=data/groups/gld_${1}_mediumvolume_vision_train.pkl --out_file=data/groups/gld_${1}_mediumvolume_vision_train_pos_neg.pkl
 
