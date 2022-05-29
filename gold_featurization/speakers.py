@@ -25,6 +25,7 @@ with open("gold/speakers.tsv",'rb') as csv_file:
 for trait in speakers.keys():
     print(f"{trait}:")
     if trait in ["worker_id", "num_examples"]:
+        continue
     for val in list(set(speakers[trait])):
         print(f"{val}: {len(speakers[speakers[trait] == val])}")
         print(list(speakers[speakers[trait] == val]["worker_id"]))
