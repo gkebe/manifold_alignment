@@ -65,7 +65,6 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None, limit=None):
     test = {}
 
     # ensure test and train have some of every object
-    train_indices = []
     train_images = []
     unique_object_names = list(OrderedSet(data['object_names']))
     unique_image_names = list(OrderedSet([(data['image_names'][i], data['object_names'][i]) for i in range(len(data['image_names']))]))
@@ -84,8 +83,8 @@ def gl_train_test_split(data, train_percentage=0.8, seed=None, limit=None):
     #        [i for i, name in enumerate(data['object_names']) if name == object_name],
     #        int(train_percentage * data['object_names'].count(object_name))
     #    )
-    train_indices = [i for i in range(len(data['object_names'])) if data['image_names'][i] in train_images]
-    test_indices = [i for i in range(len(data['object_names'])) if i not in train_indices]
+    train_indices = [i for i in range(len(data['object_names'])) if data['image_names'][i] in train_images and user_count[data['object_names'][i]] > 1]
+    test_indices = [i for i in range(len(data['object_names'])) if i not in train_indices and user_count[data['object_names'][i]] > 1]
     if limit != None:
         train_indices = random.sample(train_indices, int(limit[0]))
         training_objects_set = list(OrderedSet([object_ for i, object_ in enumerate(data['object_names']) if i in train_indices]))
