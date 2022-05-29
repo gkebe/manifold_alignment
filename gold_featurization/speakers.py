@@ -23,8 +23,12 @@ ARGS, unused = parse_args()
 with open("gold/speakers.tsv",'rb') as csv_file:
      speakers = pd.read_csv(csv_file, delimiter="\t", keep_default_na=False, na_values=['_'])
 for trait in speakers.keys():
+    print(f"{trait}:")
     for val in list(set(speakers[trait])):
-        print(speakers[speakers[trait] == val]["worker_id"])
+        print(f"{val}: {len(speakers[speakers[trait] == val])}")
+        print(list(speakers[speakers[trait] == val]["worker_id"]))
+        print()
+    print()
 
 """
 \with open("gld_vision_features.pkl",'rb') as f:
